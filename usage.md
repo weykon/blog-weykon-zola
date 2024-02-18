@@ -1,0 +1,8 @@
+
+```
+zola serve
+```
+
+```
+zola build
+```

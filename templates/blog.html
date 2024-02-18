@@ -4,7 +4,7 @@
 <h1 class="title">
   {{ section.title }}
 </h1>
-<ul>
+<ul class="post-list-ul">
   <!-- If you are using pagination, section.pages will be empty. You need to use the paginator object -->
   {% for page in section.pages %}
   <li><a href="{{ page.permalink | safe }}">{{ page.title }}</a></li>

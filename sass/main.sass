@@ -1,0 +1,42 @@
+
+*,
+*::before,
+*::after 
+  box-sizing: border-box
+
+body 
+  min-height: 100%
+  font-family: var(--main-font)
+  background-color: var(--bg-color)
+  color: var(--text-color)
+
+html 
+  scroll-behavior: smooth
+
+button:focus-visible,
+a:focus-visible 
+  outline: var(--primary-color) solid 3px
+
+::selection 
+  background-color: var(--primary-color)
+  color: var(--bg-color)
+
+.container 
+  max-width: 1200px
+  width: 100%
+@media only screen and (min-width: 950px) 
+   .container 
+      padding-left: 15%
+      padding-right: 15%
+@media only screen and (max-width: 950px) 
+   .container 
+      padding-left: 10%
+      padding-right: 10%
+@media only screen and (max-width: 600px) 
+   .container 
+      padding-left: 0
+      padding-right: 0
+@media (prefers-color-scheme: dark) 
+  .container
+    --color-background: #000000
+    --color-text: #ffffff

@@ -3,15 +3,24 @@
 
 <head>
   <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="/base.css">
+  <link rel="stylesheet" href="/main.css">
+  <link rel="stylesheet" href="/post-list-ul.css">
   <title>Weykon's Blog</title>
 </head>
 
 <body>
-  <section class="section">
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
     <div class="container">
       {% block content %} {% endblock %}
     </div>
-  </section>
+  </main>
+  <script src="{{ get_url(path='main.js') }}"></script>
 </body>
 
 </html>
