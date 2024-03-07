@@ -1,18 +1,72 @@
 $dark-theme: true !default
-$primary-color: #f8bbd0 !default
-$accent-color: #6a1b9a !default
+$color1: #ABC270 !default
+$color2: #FEC868 !default
+$color3: #FDA768 !default
+$color4: #473C33 !default
 
 @if $dark-theme
-  $primary-color: darken($primary-color, 60%)
-  $accent-color: lighten($accent-color, 60%)
+  $color1: darken($color1, 30%)
+  $text-color: #fff
 
 .button
-  background-color: $primary-color
-  border: 1px solid $accent-color
+  background-color: $color1
+  border: 1px solid $color2
   border-radius: 3px
 
 #theme-switcher
-  background-color: $accent-color
-  border: 1px solid $primary-color
+  background-color: $color2
+  border: 1px solid $color1
   width: 100px
   border-radius: 3px
+
+@mixin flex-space-between
+  display: flex
+  justify-content: space-between
+
+.top-bar
+  @include flex-space-between
+  background-color: $color1
+  border-radius: 10px
+  height: 50px
+  width: 100%
+  position: relative
+  transition: transform 0.2s ease-in-out
+
+  @mixin color_palette_hook_common
+    position: absolute
+    bottom: -60px
+    right: 0
+    height: 50px
+    width: 200px
+    margin-top: 5px
+    display: flex
+    transition: opacity 0.3s ease-in-out
+    border-radius: 10px
+    overflow: hidden
+
+  .color-palette-hook
+    @include color_palette_hook_common
+    opacity: 0
+
+  .square
+    flex: 1
+
+  #square1
+    background-color: $color1
+  #square2
+    background-color: $color2
+  #square3
+    background-color: $color3
+  #square4
+    background-color: $color4
+
+  &:hover
+    transform: scale(1.01)
+    transition: transform 0.3s ease-in-out
+
+    .color-palette-hook
+      @include color_palette_hook_common
+      opacity: 1
+    &:active
+      transition: transform 0.2s ease-in-out
+      transform: scale(1)
