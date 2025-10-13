@@ -1,0 +1,27 @@
+[Unit]
+Description=Blog Weykon - Rust Blog Backend
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/blog.weykon
+Environment="RUST_LOG=info"
+Environment="DATABASE_URL=postgres://blog_user:blog_password@localhost:5432/blog_db"
+EnvironmentFile=-/root/blog.weykon/.env
+ExecStart=/root/blog.weykon/blog-weykon
+Restart=on-failure
+RestartSec=5s
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=blog-weykon
+
+[Install]
+WantedBy=multi-user.target

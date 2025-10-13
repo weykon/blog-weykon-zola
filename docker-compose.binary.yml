@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: blog_postgres_prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-blog_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blog_password}
+      POSTGRES_DB: ${POSTGRES_DB:-blog_db}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blog_user} -d ${POSTGRES_DB:-blog_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - blog_network
+
+  backend:
+    # 使用 alpine 作为基础镜像，只需要运行预编译的二进制
+    image: alpine:latest
+    container_name: blog_backend_prod
+    command: /app/blog-weykon
+    working_dir: /app
+    environment:
+      - RUST_LOG=info
+      - DEV_MODE=false
+      - DATABASE_URL=postgres://${POSTGRES_USER:-blog_user}:${POSTGRES_PASSWORD:-blog_password}@postgres:5432/${POSTGRES_DB:-blog_db}
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
+      - SESSION_SECRET=${SESSION_SECRET:-change-this-secret-key-in-production}
+      - JWT_SECRET=${JWT_SECRET:-change-this-jwt-secret-in-production}
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./blog-weykon:/app/blog-weykon:ro  # 只读挂载二进制
+      - ./templates:/app/templates:ro      # 只读挂载模板
+      - ./static:/app/static:ro            # 只读挂载静态文件（CSS/JS）
+      - ./migrations:/app/migrations:ro    # 只读挂载迁移文件
+      - uploads:/app/static/uploads        # 可写挂载上传目录
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - blog_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+  uploads:
+    driver: local
+
+networks:
+  blog_network:
+    driver: bridge
