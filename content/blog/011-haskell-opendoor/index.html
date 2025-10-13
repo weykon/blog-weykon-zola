@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「touch」Haskell 开门
+</h2>
+<p class="subtitle"><strong>2022-11-10T16:04:09Z</strong></p>
+<h2 id="ruan-jian-gou-zao">软件构造</h2>
+<p>GHC 是 Haskell 的软件管理工具。</p>
+<p>要使用 Haskell 语言构建软件，我们在这个软件的入口理解，先使用把 GHC 好好利用起来。</p>
+<p>可以直接跳到 GHC 的安装说明 https://www.haskell.org/ghcup/</p>
+<p>Mac、 Linux 可直接， windows 另看说明。</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">curl --proto </span><span>&#39;</span><span style="color:#a3be8c;">=https</span><span>&#39;</span><span style="color:#bf616a;"> --tlsv1</span><span>.2</span><span style="color:#bf616a;"> -sSf</span><span> https://get-ghcup.haskell.org | </span><span style="color:#bf616a;">sh
+</span></code></pre>
+<p>这条命令目前有时候会在一些步骤卡住</p>
+<ul>
+<li>设置 cabal 的config 卡住</li>
+<li>从 某个地址 下载由于网络原因(agent)会卡住</li>
+</ul>
+<p>不过这个时候即使安装程序卡住也没问题, ctrl + c 退出来。</p>
+<p>使用 ghcup tui 命令，会显示可下载、推荐安装的工具。
+把他们都下载下来就好。</p>
+<h2 id="ru-men">入门</h2>
+<p>在 Haskell 过完<a href="https://www.haskell.org">基本的教程</a>后，可以从这里开始深入 <a href="http://learnyouahaskell.com/introduction#about-this-tutorial">a book</a></p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

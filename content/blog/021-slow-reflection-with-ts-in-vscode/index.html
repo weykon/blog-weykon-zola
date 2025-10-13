@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「mui-react」-slow-reflection-with-ts-in-vscode
+</h2>
+<p class="subtitle"><strong>2022-12-16T11:31:49Z</strong></p>
+<p>使用mui的时候，不知道怎么，在MacOS上 vscode 的反应特别慢（问同事windows不卡）</p>
+<ul>
+<li>导入方式问题<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">import </span><span>{ </span><span style="color:#bf616a;">Button </span><span>} </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">@mui/material</span><span>&#39;
+</span><span>
+</span><span style="color:#65737e;">// 以上换成下面这样
+</span><span style="color:#b48ead;">import  </span><span style="color:#bf616a;">Button  </span><span style="color:#b48ead;">from </span><span>&#39;</span><span style="color:#a3be8c;">@mui/material/Button</span><span>&#39;
+</span></code></pre>
+这样才会有效导入。</li>
+</ul>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

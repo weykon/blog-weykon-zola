@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「touch」Haskell - 01
+</h2>
+<p class="subtitle"><strong>2022-11-13T17:55:29Z</strong></p>
+<h2 id="first-step">first-step</h2>
+<p>将代码放到hs文件里，终端打开所在目录运行ghci，</p>
+<p>使用</p>
+<pre data-lang="ghci" style="background-color:#2b303b;color:#c0c5ce;" class="language-ghci "><code class="language-ghci" data-lang="ghci"><span>:l [code_file_name.hs]
+</span></code></pre>
+<p>将代码写入complie-time(run-time)中.</p>
+<p>然后可以直接输入函数名（填入参数）运行.</p>
+<h2 id="when-arr-concat">when arr concat</h2>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot; ++ &quot; &quot; ++ &quot;</span><span style="color:#a3be8c;">world</span><span>&quot;
+</span><span>[&#39;</span><span style="color:#a3be8c;">w</span><span>&#39;,&#39;</span><span style="color:#a3be8c;">o</span><span>&#39;] ++ [&#39;</span><span style="color:#a3be8c;">o</span><span>&#39;,&#39;</span><span style="color:#a3be8c;">t</span><span>&#39;]  
+</span></code></pre>
+<h2 id="a-way-get-element-by-index">a way get element by index: !!</h2>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>&quot;</span><span style="color:#a3be8c;">Steve Buscemi</span><span>&quot; !! </span><span style="color:#d08770;">6  
+</span><span style="color:#65737e;">-- &#39;B&#39;  
+</span></code></pre>
+<h2 id="basic-functions">basic functions</h2>
+<p>head, tail, last, init , length, null, reverse, drop, maximum, sum, product,</p>
+<p>[1..20]
+[2,4..20]
+[3,6,..20]
+[20,19..1]</p>
+<h2 id="cycle">cycle</h2>
+<p>take 10 (cycle [1,2,3])
+10 items for element cycle</p>
+<h2 id="and">| and &lt;-</h2>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>[x*</span><span style="color:#d08770;">2 </span><span>| x &lt;- [</span><span style="color:#d08770;">1</span><span>..</span><span style="color:#d08770;">10</span><span>]]
+</span></code></pre>
+<h2 id="more-condition">more condition</h2>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>[x*</span><span style="color:#d08770;">2 </span><span>| x &lt;- [</span><span style="color:#d08770;">1</span><span>..</span><span style="color:#d08770;">10</span><span>] , x*</span><span style="color:#d08770;">2</span><span>&gt;=</span><span style="color:#d08770;">12</span><span>]
+</span><span style="color:#65737e;">-- [12,14,16,18,20]
+</span></code></pre>
+<h2 id="with-a-operation">`` with a operation</h2>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>[ x | x &lt;- [</span><span style="color:#d08770;">50</span><span>..</span><span style="color:#d08770;">100</span><span>], x </span><span style="color:#8fa1b3;">`</span><span>mod</span><span style="color:#8fa1b3;">` </span><span style="color:#d08770;">7 </span><span>== </span><span style="color:#d08770;">3</span><span>] </span><span style="color:#65737e;">-- which divided with 7 and remainder 3. 
+</span><span style="color:#65737e;">-- [52,59,66,73,80,87,94]   
+</span></code></pre>
+<h1 id="redefined-or-redraw">redefined or redraw</h1>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>boomBangs xs = [ </span><span style="color:#b48ead;">if</span><span> x &lt; </span><span style="color:#d08770;">10 </span><span style="color:#b48ead;">then </span><span>&quot;</span><span style="color:#a3be8c;">BOOM!</span><span>&quot; </span><span style="color:#b48ead;">else </span><span>&quot;</span><span style="color:#a3be8c;">BANG!</span><span>&quot; | x &lt;- xs, odd x]  
+</span><span style="color:#65737e;">-- boomBangs [7..13]  
+</span><span style="color:#65737e;">-- [&quot;BOOM!&quot;,&quot;BOOM!&quot;,&quot;BANG!&quot;,&quot;BANG!&quot;] 
+</span></code></pre>
+<p>and The function odd returns True on an odd number and False</p>
+<h1 id="">/=</h1>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>[x | x &lt;- [</span><span style="color:#d08770;">10</span><span>..</span><span style="color:#d08770;">20</span><span>], x/=</span><span style="color:#d08770;">13</span><span>, x/=</span><span style="color:#d08770;">15</span><span>, x/=</span><span style="color:#d08770;">19</span><span>]
+</span></code></pre>
+<h1 id="the-with-arrays">the | with arrays</h1>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>[x * y | x &lt;- [</span><span style="color:#d08770;">2</span><span>,</span><span style="color:#d08770;">5</span><span>,</span><span style="color:#d08770;">10</span><span>], y &lt;- [</span><span style="color:#d08770;">8</span><span>,</span><span style="color:#d08770;">10</span><span>,</span><span style="color:#d08770;">11</span><span>]]
+</span></code></pre>
+<h1 id="what">what _</h1>
+<p>named a new var of length = length'</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>length&#39; xs = sum [</span><span style="color:#d08770;">1 </span><span>| _ &lt;- xs]
+</span></code></pre>
+<p>one: whatever element from input array we predicates as a _ thing.
+and they predicates to 1.
+two: then sum all elements each which is 1.
+so that sum the length.</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

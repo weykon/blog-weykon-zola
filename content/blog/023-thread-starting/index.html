@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  thread-starting
+</h2>
+<p class="subtitle"><strong>2023-01-05T02:21:24Z</strong></p>
+<p>从rust中认识线程编程</p>
+<p>对线程的初步理解</p>
+<p>在使用rust编程线程内容时，</p>
+<p>Sender, Receiver 是发送和接收的端点
+Sender是用send()发送, Receiver使用recv()接收。
+tx 和 rx, "transmitter" 和 "receiver" 的缩写。</p>
+<p><code>在使用多线程编程时，你希望有一种方式可以在线程之间发送数据，并希望有一种方式可以在另一个线程中接收数据。</code></p>
+<p>Sender<T> 和 Receiver<T> 类型提供了这种能力。</p>
+<h2 id="bi-ru-ru-xia-dai-ma-shi-li-jie-xi">比如如下代码实例解析：</h2>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// job for what ? -&gt; 将一个元组Job实例 &quot;Job(path.to_path_buf(), job_tx)&quot; 发送到线程开始处理
+</span><span style="color:#65737e;">// 在对于job_rx, 在线程代码中编写了job_rx的行为
+</span><span style="color:#65737e;">// 那么从代码顺序的角度来看，简单来说，先声明在线程的处理过程，然后在job_tx这里激活运行(&quot;send()&quot;)并附带了参数
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">some_exec</span><span>(){
+</span><span>    </span><span style="color:#b48ead;">let </span><span>(job_tx, job_rx) = crossbeam_channel::unbounded::&lt;Job&gt;();
+</span><span>    </span><span style="color:#b48ead;">let </span><span>(result_tx, result_rx) = crossbeam_channel::unbounded::&lt;ProjectDir&gt;();
+</span><span>    
+</span><span>    (</span><span style="color:#d08770;">0</span><span>..num_threads)
+</span><span>        .</span><span style="color:#96b5b4;">map</span><span>(|_| (job_rx.</span><span style="color:#96b5b4;">clone</span><span>(), result_tx.</span><span style="color:#96b5b4;">clone</span><span>()))
+</span><span>        .</span><span style="color:#96b5b4;">for_each</span><span>(|(</span><span style="color:#bf616a;">job_rx</span><span>, </span><span style="color:#bf616a;">result_tx</span><span>)| {
+</span><span>            std::thread::spawn(</span><span style="color:#b48ead;">move </span><span>|| {
+</span><span>                job_rx
+</span><span>                    .</span><span style="color:#96b5b4;">into_iter</span><span>()
+</span><span>                    .</span><span style="color:#96b5b4;">for_each</span><span>(|</span><span style="color:#bf616a;">job</span><span>| 
+</span><span>                        </span><span style="color:#96b5b4;">find_cargo_projects_task</span><span>(
+</span><span>                            job, result_tx.</span><span style="color:#96b5b4;">clone</span><span>(), verbose
+</span><span>                        )
+</span><span>                    )
+</span><span>            });
+</span><span>        });
+</span><span>    
+</span><span>    job_tx
+</span><span>        .</span><span style="color:#96b5b4;">clone</span><span>()
+</span><span>        .</span><span style="color:#96b5b4;">send</span><span>(Job(path.</span><span style="color:#96b5b4;">to_path_buf</span><span>(), job_tx))
+</span><span>        .</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    
+</span><span>    result_rx
+</span><span>}
+</span></code></pre>
+<p>使用了crossbeam_channel::unbounded，是为主程序和线程之间创建了一对接发对象作为一条无界通道。<br />
+job_tx, job_rx 具备让线程能够取得主程序中闭包函数的作用域的数据。<br />
+也就是说，使用无界通道，在线程内部的任务中接收主线程发送的消息，从而获取闭包所在的作用域内的变量。</p>
+<h2 id="zai-kan-ling-yi-duan-dai-ma">再看另一段代码</h2>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">some_exec </span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let </span><span>(sender, receiver) = mpsc::channel();
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> workers = Vec::with_capacity(size);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> receiver = Arc::new(Mutex::new(receiver));
+</span><span>    </span><span style="color:#b48ead;">for</span><span> id in </span><span style="color:#d08770;">0</span><span>..size {
+</span><span>        workers.</span><span style="color:#96b5b4;">push</span><span>(Worker::new(id, Arc::clone(&amp;receiver)));
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">impl </span><span>Worker {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span>(</span><span style="color:#bf616a;">id</span><span>: </span><span style="color:#b48ead;">usize</span><span>, </span><span style="color:#bf616a;">receiver</span><span>: Arc&lt;Mutex&lt;mpsc::Receiver&lt;Message&gt;&gt;&gt;) -&gt; Worker {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> thread = thread::spawn(</span><span style="color:#b48ead;">move </span><span>|| </span><span style="color:#b48ead;">loop </span><span>{
+</span><span>            </span><span style="color:#b48ead;">let</span><span> message = receiver.</span><span style="color:#96b5b4;">lock</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>().</span><span style="color:#96b5b4;">recv</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>
+</span><span>            </span><span style="color:#b48ead;">match</span><span> message {
+</span><span>                Message::NewJob(job) =&gt; {
+</span><span>                    println!(&quot;</span><span style="color:#a3be8c;">Woker </span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;"> got a job; executing.</span><span>&quot;, id);
+</span><span>                    </span><span style="color:#96b5b4;">job</span><span>();
+</span><span>                }
+</span><span>                Message::Terminate =&gt; {
+</span><span>                    println!(&quot;</span><span style="color:#a3be8c;">Worker </span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;"> was told to terminate</span><span>&quot;, id);
+</span><span>                    </span><span style="color:#b48ead;">break</span><span>;
+</span><span>                }
+</span><span>            }
+</span><span>        });
+</span><span>
+</span><span>        Worker {
+</span><span>            id,
+</span><span>            thread: Some(thread),
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>mpsc::channel 函数会创建一个多生产者单消费者 (multiple producer, single consumer) 的通道，<br />
+即可以有多个发送者向通道中发送消息，但是只能有一个接收者从通道中接收消息。<br />
+即说的是，在主程序有多个发送参数数据的实例，而在线程内部只有一个</p>
+<h3 id="xian-fu-xi-yi-xia-zhe-ge-an-li">先复习一下这个案例</h3>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::sync::mpsc;
+</span><span style="color:#b48ead;">use </span><span>std::thread;
+</span><span style="color:#65737e;">// mpsc : multiple producer, single consumer. 
+</span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#65737e;">// a transmitter and a receiver
+</span><span>    </span><span style="color:#b48ead;">let </span><span>(tx, rx) = mpsc::channel();
+</span><span>    
+</span><span>    thread::spawn(</span><span style="color:#b48ead;">move </span><span>|| {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> val = String::from(&quot;</span><span style="color:#a3be8c;">hi</span><span>&quot;);  </span><span style="color:#65737e;">// 线程中创建的String用tx发给tr
+</span><span>        tx.</span><span style="color:#96b5b4;">send</span><span>(val).</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    });
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> received = rx.</span><span style="color:#96b5b4;">recv</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>(); </span><span style="color:#65737e;">// ，然后在主程接收
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">Got: </span><span style="color:#d08770;">{}</span><span>&quot;, received);
+</span><span>}
+</span></code></pre>
+<h2 id="cong-you-jie-wu-jie-kan-shi-jie">从有界、无界看世界</h2>
+<p>首先，我不明白有界，是为何，我顺着理清楚<br />
+mpsc::channel() 的运作是创建一个队列数据，队列是有大小的，这种形式下不是无限的。<br />
+所以有界，这种情况会在什么需求下造成什么现象呢？<br />
+如果队列的长度超过了上限，则发送者会被阻塞，直到通道中有消息被接收。<br />
+这样可以避免内存泄漏，同时也可以降低内存分配的次数。<br />
+比如，在我们的代码中设计一段有界通道，以下：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>    </span><span style="color:#b48ead;">let </span><span>(tx, rx) = crossbeam_channel::bounded(</span><span style="color:#d08770;">100</span><span>);   </span><span style="color:#65737e;">// bounded 有界，unbounded 是无界
+</span><span>    </span><span style="color:#65737e;">// 在发送者线程中发送数据
+</span><span>    </span><span style="color:#b48ead;">for</span><span> i in </span><span style="color:#d08770;">0</span><span>..</span><span style="color:#d08770;">200 </span><span>{
+</span><span>        tx.</span><span style="color:#96b5b4;">send</span><span>(i).</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    }
+</span><span>    </span><span style="color:#65737e;">// 在接收者线程中接收数据
+</span><span>    </span><span style="color:#b48ead;">for </span><span>_ in </span><span style="color:#d08770;">0</span><span>..</span><span style="color:#d08770;">200 </span><span>{
+</span><span>        </span><span style="color:#b48ead;">let</span><span> x = rx.</span><span style="color:#96b5b4;">recv</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>        </span><span style="color:#65737e;">// 在接收者线程中处理数据
+</span><span>        </span><span style="color:#65737e;">// ...
+</span><span>    }
+</span></code></pre>
+<p>这里设定了队列是100个，就是100个的容量。<br />
+在tx发送200个，但是只有100容量，当前100个在已经写入等待接受的时候，还没开始拿走，<br />
+他就会形成停止，<br />
+在处理完，即有去接收第1个tx, 就会腾出一个空位置，这时候，tx继续写入第101个<br />
+不断地交替运行。</p>
+<p>这种情况造成的后果大概是，如果执行代码中一直没去接收数据，在超出数组范围的情况下，<br />
+就无法继续进行写入操作了<br />
+形式：在我的线程中要处理接收的任务，这个任务有一定的耗时，线程这里一时间处理不完在接收过程中的任务，<br />
+正好现在他的数组也满了，这个时候就写入不进去了，写入的进程就会卡住。<br />
+发送者一般是主线程，如果阻塞了，岂不是主线程卡住了，所以这样子不行。</p>
+<h2 id="wu-jie">无界</h2>
+<p>无界通道使用一种叫共享状态的数据结构</p>
+<p>共享状态可以让多个线程同时访问，并且在多个线程同时修改时保证数据一致性</p>
+<p>原理是使用互斥锁或者读写锁来实现的</p>
+<h3 id="nei-cun-xian-jing">内存陷阱</h3>
+<p>在使用无界通道，他的写入数据是由（开发）用户自己掌握了，<br />
+如果是一位无畏战士创建了大量的写入程序，会占用大量的内容，可能会造成内存泄漏。<br />
+（内存泄漏的简单来说就是程序分配的内存用完了，但却没有被释放。这样就会导致程序无法继续分配内存，从而导致程序崩溃或者性能下降。）</p>
+<h2 id="you-mei-feng-jing-hua">优美风景画</h2>
+<ul>
+<li>互斥锁<br />
+它能保证在任意时刻，只有一个线程访问共享状态。
+Mutex 是 "Mutual Exclusion" 的缩写，lock().unwrap() 取得后，在函数结束会自动释放锁</li>
+</ul>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::sync::{Arc, Mutex}; 
+</span><span style="color:#b48ead;">use </span><span>std::thread; 
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> counter = Arc::new(Mutex::new(</span><span style="color:#d08770;">0</span><span>));
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> handles = vec![];
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">for </span><span>_ in </span><span style="color:#d08770;">0</span><span>..</span><span style="color:#d08770;">10 </span><span>{
+</span><span>        </span><span style="color:#b48ead;">let</span><span> counter = Arc::clone(&amp;counter);
+</span><span>        </span><span style="color:#b48ead;">let</span><span> handle = thread::spawn(</span><span style="color:#b48ead;">move </span><span>|| {
+</span><span>            </span><span style="color:#b48ead;">let mut</span><span> num = counter.</span><span style="color:#96b5b4;">lock</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>            *num += </span><span style="color:#d08770;">1</span><span>;
+</span><span>        });
+</span><span>        handles.</span><span style="color:#96b5b4;">push</span><span>(handle);
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">for</span><span> handle in handles {
+</span><span>        handle.</span><span style="color:#96b5b4;">join</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    }
+</span><span>
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">Result: </span><span style="color:#d08770;">{}</span><span>&quot;, *counter.</span><span style="color:#96b5b4;">lock</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>());
+</span><span>
+</span><span>}
+</span><span>
+</span></code></pre>
+<ul>
+<li>读写锁<br />
+能保证多个线程同时访问共享状态，但是在写入数据时会被阻塞。</li>
+</ul>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::sync::{Arc, RwLock};
+</span><span style="color:#b48ead;">use </span><span>std::thread;
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> counter = Arc::new(RwLock::new(</span><span style="color:#d08770;">0</span><span>));
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> handles = vec![];
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">for </span><span>_ in </span><span style="color:#d08770;">0</span><span>..</span><span style="color:#d08770;">10 </span><span>{
+</span><span>        </span><span style="color:#b48ead;">let</span><span> counter = Arc::clone(&amp;counter);
+</span><span>        </span><span style="color:#b48ead;">let</span><span> handle = thread::spawn(</span><span style="color:#b48ead;">move </span><span>|| {
+</span><span>            </span><span style="color:#b48ead;">let mut</span><span> num = counter.</span><span style="color:#96b5b4;">write</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>            *num += </span><span style="color:#d08770;">1</span><span>;
+</span><span>        });
+</span><span>        handles.</span><span style="color:#96b5b4;">push</span><span>(handle);
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">for</span><span> handle in handles {
+</span><span>        handle.</span><span style="color:#96b5b4;">join</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    }
+</span><span>
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">Result: </span><span style="color:#d08770;">{}</span><span>&quot;, *counter.</span><span style="color:#96b5b4;">read</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>());
+</span><span>}
+</span></code></pre>
+<h3 id="si-suo">死锁</h3>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::sync::{Arc, Mutex};
+</span><span style="color:#b48ead;">use </span><span>std::thread;
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> lock1 = Arc::new(Mutex::new(</span><span style="color:#d08770;">0</span><span>));
+</span><span>    </span><span style="color:#b48ead;">let</span><span> lock2 = Arc::new(Mutex::new(</span><span style="color:#d08770;">0</span><span>));
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> lock1_ref = lock1.</span><span style="color:#96b5b4;">clone</span><span>();
+</span><span>    </span><span style="color:#b48ead;">let</span><span> lock2_ref = lock2.</span><span style="color:#96b5b4;">clone</span><span>();
+</span><span>
+</span><span>    thread::spawn(</span><span style="color:#b48ead;">move </span><span>|| {
+</span><span>        </span><span style="color:#65737e;">// 锁住 lock1
+</span><span>        </span><span style="color:#b48ead;">let mut</span><span> num = lock1_ref.</span><span style="color:#96b5b4;">lock</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>        *num = </span><span style="color:#d08770;">5</span><span>;
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 尝试锁住 lock2，这里就会发生死锁
+</span><span>        </span><span style="color:#b48ead;">let mut</span><span> num = lock2_ref.</span><span style="color:#96b5b4;">lock</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    });
+</span><span>
+</span><span>    thread::spawn(</span><span style="color:#b48ead;">move </span><span>|| {
+</span><span>        </span><span style="color:#65737e;">// 锁住 lock2
+</span><span>        </span><span style="color:#b48ead;">let mut</span><span> num = lock2_ref.</span><span style="color:#96b5b4;">lock</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>        *num = </span><span style="color:#d08770;">10</span><span>;
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 尝试锁住 lock1，这里也会发生死锁
+</span><span>        </span><span style="color:#b48ead;">let mut</span><span> num = lock1_ref.</span><span style="color:#96b5b4;">lock</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    });
+</span><span>}
+</span></code></pre>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

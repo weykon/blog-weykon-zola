@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  All About Proxy
+</h2>
+<p class="subtitle"><strong>2023-01-14T08:07:22Z</strong></p>
+<p>一直以来都在使用代理，但是总是不明白里面的概念。</p>
+<h2 id="fu-wu-duan-he-ke-hu-duan-de-gai-nian-chai-bie">服务端和客户端的概念差别：</h2>
+<p>一个是提供代理服务，一个是使用代理服务。</p>
+<h2 id="tun-mode">TUN MODE</h2>
+<p>建立一个虚拟网络通道，hide yourself.</p>
+<h2 id="mixin">MIXIN</h2>
+<p>// TODO:</p>
+<h2 id="ju-yu-wang-ke-jie-ru">局域网可接入</h2>
+<p>这个功能能解决一些设备中具有网络代理设置的代理问题
+接入设备中进入网络配置代理设置，地址的设置是提供代理的设备并连接到提供服务的端口
+对于移动设备大部分都具有这个设置
+但是XBOX上没有，这个时候无法设置代理配置，就要直接连接一个具有代理转发的设备来实现
+就是下面的DCHP功能，也具有可玩性</p>
+<h2 id="dchpde-gong-neng">DCHP的功能</h2>
+<p>首先我让机器设置为可代理转发的状态，<a href="https://weykon.com/blog/blog/028-all-about-proxy/#1">方法</a></p>
+<p>在代理XBOX的时候，我是成功了代理一定的服务，但是在战区的游戏对战的服务，我的代理失败了。
+这种情况只好用游戏加速器了。😭</p>
+<p>而对于我使用Quest2的代理（Quest2的系统限制很容易导致设备中的代理失效，比如时间会错而无法设置）
+我使用DCHP的功能给他转发，但是q2设置直接连接回了路由器作网关ip了似乎不成功
+这个时候我只会使用普通的系统代理，然后连接wifi，在sidequset中使用ADB控制直接加入代理环境的ip和port
+<a href="https://stackoverflow.com/questions/73314382/setting-a-proxy-using-adb">adb set proxy</a></p>
+<p>这个功能是出乎我意料，不过连接的时候用起来比较麻烦。
+在Clash for windows当中</p>
+<ol>
+<li>确保TUN MODE正确运行</li>
+<li>确保路由器是关闭了DCHP功能</li>
+<li>让想要有代理的设备重新连接局域网</li>
+<li>见到新设备进入后，点击切换配置启动代理（设置好像又要重新进入局域网）</li>
+</ol>
+<hr />
+<p id="1"></p>
+<p>在macbook里控制是否代理转发， 0: 关闭， 1: 开启。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>sudo sysctl -w net.inet.ip.forwarding=0
+</span></code></pre>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,560 @@
+{% extends "base.html" %}
+
+{% block title %}Mutters - Weykon's Blog{% endblock %}
+
+{% block content %}
+<div class="mutters-container">
+    <div class="mutters-header">
+        <h1>Mutters</h1>
+        <p class="subtitle">Quick thoughts and casual posts</p>
+    </div>
+
+    <!-- Create Mutter Form -->
+    <div class="create-mutter-card">
+        <div class="create-mutter-header">
+            <h3>What's on your mind?</h3>
+        </div>
+        <form id="create-mutter-form">
+            <div class="form-group">
+                <textarea
+                    id="mutter-content"
+                    name="content"
+                    placeholder="Share your thoughts... (max 1000 characters)"
+                    rows="4"
+                    required
+                ></textarea>
+                <div class="char-counter">
+                    <span id="char-count">0</span> / 1000
+                </div>
+            </div>
+            <div class="form-group optional-title">
+                <label for="mutter-title">
+                    <input type="checkbox" id="use-custom-title">
+                    Custom Title (optional)
+                </label>
+                <input
+                    type="text"
+                    id="mutter-title"
+                    name="title"
+                    placeholder="Optional custom title..."
+                    style="display: none;"
+                >
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-post" id="post-btn">
+                    Post Mutter
+                </button>
+                <button type="button" class="btn btn-clear" id="clear-btn">
+                    Clear
+                </button>
+            </div>
+        </form>
+        <div id="form-message" class="form-message" style="display: none;"></div>
+    </div>
+
+    <div class="mutters-timeline">
+        {% for mutter in mutters %}
+        <article class="mutter-card">
+            <div class="mutter-content">
+                <p>{{ mutter.content }}</p>
+            </div>
+
+            <div class="mutter-meta">
+                <span class="date">{{ mutter.created_at | date(format="%Y-%m-%d %H:%M") }}</span>
+                <span class="divider">•</span>
+                <span class="char-count">{{ mutter.content | length }} chars</span>
+                <span class="divider">•</span>
+                <span class="views">{{ mutter.view_count }} views</span>
+                <span class="divider">•</span>
+                <a href="/mutters/{{ mutter.slug }}" class="permalink">Link</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    {% if mutters | length == 0 %}
+    <div class="empty-state">
+        <p>No mutters yet.</p>
+    </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        <div class="pagination-info">
+            Showing page {{ page }} of {{ total_pages }} ({{ total_count }} mutters total)
+        </div>
+        <div class="pagination-controls">
+            {% if has_prev %}
+            <a href="/mutters?page={{ prev_page }}" class="pagination-btn">&laquo; Previous</a>
+            {% else %}
+            <span class="pagination-btn disabled">&laquo; Previous</span>
+            {% endif %}
+
+            {% for p in range(start=1, end=total_pages + 1) %}
+                {% if p == page %}
+                <span class="pagination-btn active">{{ p }}</span>
+                {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                <a href="/mutters?page={{ p }}" class="pagination-btn">{{ p }}</a>
+                {% elif p == 2 or p == total_pages - 1 %}
+                <span class="pagination-btn">...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if has_next %}
+            <a href="/mutters?page={{ next_page }}" class="pagination-btn">Next &raquo;</a>
+            {% else %}
+            <span class="pagination-btn disabled">Next &raquo;</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.mutters-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.mutters-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.mutters-header h1 {
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Create Mutter Form */
+.create-mutter-card {
+    padding: 1.5rem;
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.create-mutter-header h3 {
+    margin: 0 0 1rem 0;
+    color: #667eea;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.create-mutter-card .form-group {
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.create-mutter-card textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+}
+
+.create-mutter-card textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.create-mutter-card textarea.error {
+    border-color: #e53e3e;
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #999;
+    margin-top: 0.25rem;
+}
+
+.char-counter.warning {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.char-counter.error {
+    color: #e53e3e;
+    font-weight: 600;
+}
+
+.optional-title label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+.optional-title input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.optional-title input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.optional-title input[type="text"]:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-post {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    flex: 1;
+}
+
+.btn-post:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-post:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-clear {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.btn-clear:hover {
+    background: #e0e0e0;
+}
+
+.form-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.form-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.form-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.mutters-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.mutter-card {
+    padding: 1.5rem;
+    border-left: 4px solid #667eea;
+    background: #f9f9f9;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.mutter-card:hover {
+    background: #f5f5f5;
+    border-left-color: #5a67d8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.mutter-content {
+    margin-bottom: 1rem;
+}
+
+.mutter-content p {
+    margin: 0;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 1rem;
+    color: #333;
+}
+
+.mutter-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: #999;
+}
+
+.mutter-meta .divider {
+    color: #ddd;
+}
+
+.mutter-meta a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.mutter-meta a:hover {
+    text-decoration: underline;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #999;
+}
+
+.pagination {
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+.pagination-info {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pagination-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    background: white;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.pagination-btn:hover:not(.disabled):not(.active) {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.pagination-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    font-weight: bold;
+}
+
+.pagination-btn.disabled {
+    color: #ccc;
+    cursor: not-allowed;
+    border-color: #eee;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .mutters-container {
+        padding: 1rem;
+    }
+
+    .mutter-card {
+        padding: 1rem;
+    }
+
+    .mutter-meta {
+        font-size: 0.75rem;
+    }
+}
+</style>
+
+<script>
+// DOM elements
+const form = document.getElementById('create-mutter-form');
+const contentTextarea = document.getElementById('mutter-content');
+const charCountSpan = document.getElementById('char-count');
+const charCounter = document.querySelector('.char-counter');
+const postBtn = document.getElementById('post-btn');
+const clearBtn = document.getElementById('clear-btn');
+const formMessage = document.getElementById('form-message');
+const useCustomTitleCheckbox = document.getElementById('use-custom-title');
+const titleInput = document.getElementById('mutter-title');
+
+// Character count functionality
+contentTextarea.addEventListener('input', function() {
+    const length = this.value.length;
+    charCountSpan.textContent = length;
+
+    // Update styling based on character count
+    charCounter.classList.remove('warning', 'error');
+    contentTextarea.classList.remove('error');
+
+    if (length > 1000) {
+        charCounter.classList.add('error');
+        contentTextarea.classList.add('error');
+        postBtn.disabled = true;
+    } else if (length > 900) {
+        charCounter.classList.add('warning');
+        postBtn.disabled = false;
+    } else {
+        postBtn.disabled = length === 0;
+    }
+});
+
+// Toggle custom title input
+useCustomTitleCheckbox.addEventListener('change', function() {
+    if (this.checked) {
+        titleInput.style.display = 'block';
+    } else {
+        titleInput.style.display = 'none';
+        titleInput.value = '';
+    }
+});
+
+// Clear button
+clearBtn.addEventListener('click', function() {
+    contentTextarea.value = '';
+    titleInput.value = '';
+    useCustomTitleCheckbox.checked = false;
+    titleInput.style.display = 'none';
+    charCountSpan.textContent = '0';
+    charCounter.classList.remove('warning', 'error');
+    contentTextarea.classList.remove('error');
+    postBtn.disabled = true;
+    hideMessage();
+});
+
+// Form submission
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const content = contentTextarea.value.trim();
+
+    // Validation
+    if (!content) {
+        showMessage('Content cannot be empty', 'error');
+        return;
+    }
+
+    if (content.length > 1000) {
+        showMessage('Content is too long (max 1000 characters)', 'error');
+        return;
+    }
+
+    // Prepare data
+    const data = {
+        content: content
+    };
+
+    // Add custom title if provided
+    if (useCustomTitleCheckbox.checked && titleInput.value.trim()) {
+        data.title = titleInput.value.trim();
+    }
+
+    // Disable button and show loading state
+    postBtn.disabled = true;
+    postBtn.textContent = 'Posting...';
+
+    try {
+        const response = await fetch('/api/mutters', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showMessage('Mutter posted successfully! Refreshing...', 'success');
+
+            // Clear form
+            contentTextarea.value = '';
+            titleInput.value = '';
+            useCustomTitleCheckbox.checked = false;
+            titleInput.style.display = 'none';
+            charCountSpan.textContent = '0';
+            charCounter.classList.remove('warning', 'error');
+
+            // Reload page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showMessage('Error: ' + (result.error || 'Failed to post mutter'), 'error');
+            postBtn.disabled = false;
+            postBtn.textContent = 'Post Mutter';
+        }
+    } catch (error) {
+        showMessage('Error: ' + error.message, 'error');
+        postBtn.disabled = false;
+        postBtn.textContent = 'Post Mutter';
+    }
+});
+
+// Helper functions
+function showMessage(message, type) {
+    formMessage.textContent = message;
+    formMessage.className = 'form-message ' + type;
+    formMessage.style.display = 'block';
+
+    // Auto-hide success messages after 3 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            hideMessage();
+        }, 3000);
+    }
+}
+
+function hideMessage() {
+    formMessage.style.display = 'none';
+    formMessage.textContent = '';
+    formMessage.className = 'form-message';
+}
+
+// Initialize button state
+postBtn.disabled = true;
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「git」微操作
+</h2>
+<p class="subtitle"><strong>2022-11-12T19:51:21Z</strong></p>
+<h1 id="all-for-commit">All for Commit</h1>
+<h2 id="xiu-gai-commitxin-xi">修改commit信息</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>git commit --amend 
+</span></code></pre>
+<h2 id="he-bing-commit">合并commit</h2>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">git</span><span> reset</span><span style="color:#bf616a;"> --soft</span><span> HEAD</span><span style="color:#bf616a;">~</span><span>3 &amp;&amp; 
+</span><span style="color:#bf616a;">git</span><span> commit
+</span></code></pre>
+<h2 id="ben-di-he-bing-commit">本地合并commit</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>git rebase -i &lt;the pre commit of starting&gt;
+</span></code></pre>
+<h2 id="yuan-cheng-he-bing-commit">远程合并commit</h2>
+<p>同样本地然后加force</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>git push origin +master
+</span></code></pre>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

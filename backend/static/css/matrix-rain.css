@@ -1,0 +1,91 @@
+/**
+ * Matrix Rain Effect Styles
+ * 矩阵雨效果样式
+ */
+
+.matrix-container {
+    background-color: #0f0f0f;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 1.5rem;
+    border-radius: 12px;
+    background-image: radial-gradient(rgba(0, 150, 0, 0.75), black 120%);
+    text-shadow: 0 0 5px #C8C8C8;
+    min-height: 400px;
+    overflow: hidden;
+    justify-content: center;
+    font: 1.2rem Inconsolata, 'Courier New', monospace;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0, 255, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.matrix-container:hover {
+    box-shadow: 0 12px 48px rgba(0, 255, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Scanline effect */
+.matrix-container::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+.matrix-line {
+    position: relative;
+    z-index: 2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: center;
+}
+
+.matrix-keyword {
+    color: #33ff33;
+    font-size: 1.23rem;
+    font-weight: bold;
+    animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% {
+        text-shadow: 0 0 5px #33ff33, 0 0 10px #33ff33;
+    }
+    50% {
+        text-shadow: 0 0 10px #33ff33, 0 0 20px #33ff33, 0 0 30px #33ff33;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .matrix-container {
+        font-size: 1rem;
+        min-height: 300px;
+        padding: 1rem;
+    }
+
+    .matrix-keyword {
+        font-size: 1.1rem;
+    }
+}
+
+/* Selection styling */
+.matrix-container::selection,
+.matrix-container *::selection {
+    background: #0080FF;
+    text-shadow: none;
+}

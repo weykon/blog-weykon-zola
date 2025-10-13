@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「tip」Javascript - Objects - Writable, Configurable &amp; Enumerable
+</h2>
+<p class="subtitle"><strong>2022-11-07T06:16:58Z</strong></p>
+<ul>
+<li><strong>writable</strong>: 我可以修改他们的值，我可以更新一个新的值给属性。（默认true）</li>
+<li><strong>enumerable</strong>: 我可以用 for in 访问到他们，且enumerable是使用 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys">Object.keys</a> 的返回。</li>
+<li><strong>configurable</strong>: 我可以修改这个属性的所有，包括 non-enumerable, non-writable 甚至 non-cofigurable，使用 delete 关键字操作只有在 configurable 为 true 才能操作。</li>
+</ul>
+<hr />
+<ul>
+<li><strong>writable</strong>: I can modify their values, I can update a property just assigning a new value to it.Defaults to <span style="background-color: #9b9a94;color:black">true</span>.</li>
+<li><strong>enumerable</strong>: I can access to all of them using a for..in loop. Also, enumerable property keys of an object are returned using <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys">Object.keys</a> method.** **Defaults to <span style="background-color: #9b9a94;color:black">true</span>.</li>
+<li><strong>configurable</strong>: I can modify the behavior of the property, so I can make them non-enumerable, non-writable or even non-cofigurable if I feel like doing so. Configurable properties are the only ones that can be removed using the delete operator. Defaults to <span style="background-color: #9b9a94;color:black">true</span>.</li>
+</ul>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

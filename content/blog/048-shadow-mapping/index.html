@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  wgpu 阴影映射基础
+</h2>
+<p class="subtitle"><strong>2025-04-01T17:05:12.417Z</strong></p>
+<h1 id="webgpu-yin-ying-ying-she-shi-xian-yu-diao-shi-zhi-nan">WebGPU 阴影映射实现与调试指南</h1>
+<h2 id="qian-yan">前言</h2>
+<p>在 WebGPU 中实现阴影映射是 3D 渲染中的一个重要环节，但也是容易出错的部分。本文将记录我在实现和调试 WebGPU 阴影映射过程中遇到的挑战，以及解决方案，特别关注顶点和索引缓冲区的管理问题。</p>
+<h2 id="yin-ying-ying-she-yuan-li">阴影映射原理</h2>
+<p>阴影映射(Shadow Mapping)的基本思想是：</p>
+<ol>
+<li>从光源视角渲染场景，记录深度信息到一个纹理（深度贴图）</li>
+<li>从摄像机视角渲染场景，使用之前的深度贴图来判断每个片段是否在阴影中</li>
+</ol>
+<p><img src="https://example.com/shadow-mapping-principle.png" alt="阴影映射原理" /></p>
+<h2 id="wo-de-shi-xian-jia-gou">我的实现架构</h2>
+<p>在我的项目中，阴影系统主要包含以下几个关键组件：</p>
+<ol>
+<li><code>DepthTexture</code> - 负责创建和管理阴影深度纹理与采样器</li>
+<li><code>ShadowScene</code> - 主要场景对象，包含几何体和渲染管线</li>
+<li><code>ShadowPlane</code> - 地面平面，用于接收阴影</li>
+</ol>
+<p>整体渲染流程分为两个通道：</p>
+<ul>
+<li>第一个通道：从光源角度渲染深度图</li>
+<li>第二个通道：渲染带阴影的主场景</li>
+</ul>
+<h2 id="yu-dao-de-wen-ti-suo-yin-yu-ding-dian-huan-chong-qu-guan-li">遇到的问题：索引与顶点缓冲区管理</h2>
+<p>在实现过程中，我碰到的最大挑战是索引与顶点缓冲区的正确管理，这导致了很多难以调试的问题。</p>
+<h3 id="wen-ti-yi-he-bing-ji-he-ti-shi-suo-yin-pian-yi-cuo-wu">问题一：合并几何体时索引偏移错误</h3>
+<p>当我尝试将立方体和平面合并到同一个渲染通道时，忽略了需要为平面的索引添加适当的偏移量。</p>
+<p>错误代码：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 错误：直接合并索引，没有考虑顶点数组偏移
+</span><span style="color:#b48ead;">let</span><span> for_common_index = cube.indices
+</span><span>    .</span><span style="color:#96b5b4;">iter</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">cloned</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">chain</span><span>(plane.indices.</span><span style="color:#96b5b4;">iter</span><span>().</span><span style="color:#96b5b4;">cloned</span><span>())
+</span><span>    .collect::&lt;Vec&lt;</span><span style="color:#b48ead;">u16</span><span>&gt;&gt;();
+</span></code></pre>
+<p>正确做法应该是为平面的索引添加立方体顶点数量的偏移：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 1. 获取立方体顶点数量
+</span><span style="color:#b48ead;">let</span><span> cube_vertex_count = cube.vertices.</span><span style="color:#96b5b4;">len</span><span>() as </span><span style="color:#b48ead;">u16</span><span>;
+</span><span>
+</span><span style="color:#65737e;">// 2. 应用偏移到平面索引
+</span><span style="color:#b48ead;">let</span><span> plane_indices_with_offset = plane.indices
+</span><span>    .</span><span style="color:#96b5b4;">iter</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">map</span><span>(|</span><span style="color:#bf616a;">idx</span><span>| idx + cube_vertex_count) </span><span style="color:#65737e;">// 加上立方体顶点数作为偏移
+</span><span>    .collect::&lt;Vec&lt;</span><span style="color:#b48ead;">u16</span><span>&gt;&gt;();
+</span><span>
+</span><span style="color:#65737e;">// 3. 合并索引
+</span><span style="color:#b48ead;">let</span><span> for_common_index = cube.indices
+</span><span>    .</span><span style="color:#96b5b4;">iter</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">cloned</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">chain</span><span>(plane_indices_with_offset.</span><span style="color:#96b5b4;">iter</span><span>().</span><span style="color:#96b5b4;">cloned</span><span>())
+</span><span>    .collect::&lt;Vec&lt;</span><span style="color:#b48ead;">u16</span><span>&gt;&gt;();
+</span></code></pre>
+<h3 id="wen-ti-er-ding-dian-jie-gou-bu-yi-zhi">问题二：顶点结构不一致</h3>
+<p>立方体使用的是包含位置、法线和颜色的复杂顶点结构，而平面使用的是简单的位置数组。合并时需要保持一致的格式。</p>
+<p>解决方案是将所有几何体转换为一致的顶点格式：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 提取立方体的位置信息
+</span><span style="color:#b48ead;">let</span><span> for_depth_verticies = cube.vertices
+</span><span>    .</span><span style="color:#96b5b4;">iter</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">map</span><span>(|</span><span style="color:#bf616a;">v</span><span>| v.position)
+</span><span>    .collect::&lt;Vec&lt;[</span><span style="color:#b48ead;">f32</span><span>; </span><span style="color:#d08770;">3</span><span>]&gt;&gt;();
+</span><span>
+</span><span style="color:#65737e;">// 平面已经是位置格式
+</span><span style="color:#b48ead;">let</span><span> plane_vertex = plane.vertices
+</span><span>    .</span><span style="color:#96b5b4;">iter</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">map</span><span>(|</span><span style="color:#bf616a;">v</span><span>| [v[</span><span style="color:#d08770;">0</span><span>], v[</span><span style="color:#d08770;">1</span><span>], v[</span><span style="color:#d08770;">2</span><span>]])
+</span><span>    .collect::&lt;Vec&lt;[</span><span style="color:#b48ead;">f32</span><span>; </span><span style="color:#d08770;">3</span><span>]&gt;&gt;();
+</span><span>
+</span><span style="color:#65737e;">// 合并为一致的格式
+</span><span style="color:#b48ead;">let</span><span> for_common_vertex = for_depth_verticies
+</span><span>    .</span><span style="color:#96b5b4;">iter</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">cloned</span><span>()
+</span><span>    .</span><span style="color:#96b5b4;">chain</span><span>(plane_vertex.</span><span style="color:#96b5b4;">iter</span><span>().</span><span style="color:#96b5b4;">cloned</span><span>())
+</span><span>    .collect::&lt;Vec&lt;[</span><span style="color:#b48ead;">f32</span><span>; </span><span style="color:#d08770;">3</span><span>]&gt;&gt;();
+</span></code></pre>
+<h2 id="shen-du-wen-li-guan-li">深度纹理管理</h2>
+<p>另一个关键点是正确创建和使用深度纹理。在 WebGPU 中，如果要在一个通道渲染深度纹理，然后在另一个通道使用它，需要确保：</p>
+<ol>
+<li>纹理有正确的用途标志</li>
+<li>创建适当的视图</li>
+<li>设置正确的采样器</li>
+</ol>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> shadow_texture = device.</span><span style="color:#96b5b4;">create_texture</span><span>(&amp;wgpu::TextureDescriptor {
+</span><span>    </span><span style="color:#65737e;">// ...配置
+</span><span>    format: wgpu::TextureFormat::Depth32Float,
+</span><span>    usage: wgpu::TextureUsages::</span><span style="color:#d08770;">RENDER_ATTACHMENT </span><span>| wgpu::TextureUsages::</span><span style="color:#d08770;">TEXTURE_BINDING</span><span>,
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>});
+</span><span>
+</span><span style="color:#65737e;">// 创建视图
+</span><span style="color:#b48ead;">let</span><span> shadow_view = shadow_texture.</span><span style="color:#96b5b4;">create_view</span><span>(&amp;wgpu::TextureViewDescriptor::default());
+</span><span>
+</span><span style="color:#65737e;">// 创建比较采样器
+</span><span style="color:#b48ead;">let</span><span> shadow_sampler = device.</span><span style="color:#96b5b4;">create_sampler</span><span>(&amp;wgpu::SamplerDescriptor {
+</span><span>    </span><span style="color:#65737e;">// ...配置
+</span><span>    compare: Some(wgpu::CompareFunction::LessEqual),
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>});
+</span></code></pre>
+<h2 id="guang-yuan-bian-huan-ju-zhen">光源变换矩阵</h2>
+<p>在阴影映射中，我们需要两个重要的变换矩阵：</p>
+<ol>
+<li>光源的视图投影矩阵 - 用于渲染深度图</li>
+<li>相机的视图投影矩阵 - 用于主场景渲染</li>
+</ol>
+<p>光源矩阵计算示例：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 光源位置和目标
+</span><span style="color:#b48ead;">let</span><span> light_position = Vec3::new(-</span><span style="color:#d08770;">3.</span><span>, </span><span style="color:#d08770;">5.</span><span>, </span><span style="color:#d08770;">3.</span><span>);
+</span><span style="color:#b48ead;">let</span><span> light_target = Vec3::</span><span style="color:#d08770;">ZERO</span><span>;
+</span><span style="color:#b48ead;">let</span><span> light_up = Vec3::Y;
+</span><span>
+</span><span style="color:#65737e;">// 创建视图矩阵
+</span><span style="color:#b48ead;">let</span><span> light_view = Mat4::look_at_rh(light_position, light_target, light_up);
+</span><span>
+</span><span style="color:#65737e;">// 创建正交投影矩阵
+</span><span style="color:#b48ead;">let</span><span> light_proj = Mat4::orthographic_rh(-</span><span style="color:#d08770;">3.0</span><span>, </span><span style="color:#d08770;">3.0</span><span>, -</span><span style="color:#d08770;">3.0</span><span>, </span><span style="color:#d08770;">3.0</span><span>, </span><span style="color:#d08770;">0.1</span><span>, </span><span style="color:#d08770;">10.0</span><span>);
+</span><span>
+</span><span style="color:#65737e;">// 组合成视图投影矩阵
+</span><span style="color:#b48ead;">let</span><span> light_view_proj = light_proj * light_view;
+</span></code></pre>
+<h2 id="dong-tai-guang-yuan">动态光源</h2>
+<p>为了增加场景的动态效果，我实现了一个围绕场景旋转的光源：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 更新函数中
+</span><span style="color:#b48ead;">let</span><span> rotation_speed = </span><span style="color:#d08770;">0.8</span><span>; </span><span style="color:#65737e;">// 每秒旋转的速度
+</span><span style="color:#b48ead;">let</span><span> angle = dt / </span><span style="color:#d08770;">1000. </span><span>* rotation_speed;
+</span><span>scene.angle += angle;
+</span><span>
+</span><span style="color:#b48ead;">let</span><span> radius = </span><span style="color:#d08770;">4.0</span><span>;
+</span><span style="color:#b48ead;">let</span><span> height = </span><span style="color:#d08770;">5.0</span><span>;
+</span><span>
+</span><span style="color:#65737e;">// 计算新的光源位置
+</span><span style="color:#b48ead;">let</span><span> light_position = glam::Vec3::new(
+</span><span>    radius * </span><span style="color:#b48ead;">f32</span><span>::cos(scene.angle),
+</span><span>    height,
+</span><span>    radius * </span><span style="color:#b48ead;">f32</span><span>::sin(scene.angle),
+</span><span>);
+</span><span>
+</span><span style="color:#65737e;">// 更新光源矩阵
+</span><span style="color:#65737e;">// ...
+</span></code></pre>
+<h2 id="zhao-se-qi-shi-xian">着色器实现</h2>
+<p>阴影映射需要两个关键着色器：</p>
+<h3 id="1-shen-du-tong-dao-zhao-se-qi">1. 深度通道着色器</h3>
+<p>仅用于捕获深度信息，不需要输出颜色：</p>
+<pre data-lang="wgsl" style="background-color:#2b303b;color:#c0c5ce;" class="language-wgsl "><code class="language-wgsl" data-lang="wgsl"><span>struct LightStorage {
+</span><span>    view_proj: mat4x4&lt;f32&gt;,
+</span><span>}
+</span><span>@group(0) @binding(0)
+</span><span>var&lt;storage, read&gt; light: LightStorage;
+</span><span>
+</span><span>struct VertexInput {
+</span><span>    @location(0) position: vec3&lt;f32&gt;,
+</span><span>}
+</span><span>struct VertexOutput {
+</span><span>    @builtin(position) position: vec4&lt;f32&gt;,
+</span><span>}
+</span><span>@vertex
+</span><span>fn vs_main(in: VertexInput) -&gt; VertexOutput {
+</span><span>    var out: VertexOutput;
+</span><span>    out.position = light.view_proj * vec4&lt;f32&gt;(in.position, 1.0);
+</span><span>    return out;
+</span><span>}
+</span></code></pre>
+<h3 id="2-zhu-chang-jing-zhao-se-qi">2. 主场景着色器</h3>
+<p>需要计算阴影并应用光照：</p>
+<pre data-lang="wgsl" style="background-color:#2b303b;color:#c0c5ce;" class="language-wgsl "><code class="language-wgsl" data-lang="wgsl"><span>// 在顶点着色器中，计算光空间位置
+</span><span>@vertex
+</span><span>fn vs_main(in: VertexInput) -&gt; VertexOutput {
+</span><span>    var out: VertexOutput;
+</span><span>    out.world_pos = in.position;
+</span><span>    out.position = uniforms.matrix * vec4&lt;f32&gt;(in.position, 1.0);
+</span><span>    out.light_space_position = light.view_proj * vec4&lt;f32&gt;(in.position, 1.0);
+</span><span>    return out;
+</span><span>}
+</span><span>
+</span><span>// 在片元着色器中，检测阴影
+</span><span>@fragment
+</span><span>fn fs_main(in: VertexOutput) -&gt; @location(0) vec4&lt;f32&gt; {
+</span><span>    // 计算光空间坐标
+</span><span>    let proj_coords = in.light_space_position.xyz / in.light_space_position.w;
+</span><span>    
+</span><span>    // 转换到[0,1]范围
+</span><span>    let shadow_coords = vec2&lt;f32&gt;(
+</span><span>        proj_coords.x * 0.5 + 0.5,
+</span><span>        -proj_coords.y * 0.5 + 0.5
+</span><span>    );
+</span><span>    
+</span><span>    // 当前深度值
+</span><span>    let current_depth = proj_coords.z * 0.5 + 0.5;
+</span><span>    
+</span><span>    // 获取阴影值（使用PCF采样）
+</span><span>    let shadow = getShadow(shadow_coords, current_depth);
+</span><span>    
+</span><span>    // 应用光照和阴影
+</span><span>    // ...
+</span><span>}
+</span></code></pre>
+<h2 id="yin-ying-cai-yang-you-hua">阴影采样优化</h2>
+<p>为了获得更柔和的阴影边缘，我实现了 PCF (Percentage Closer Filtering) 阴影：</p>
+<pre data-lang="wgsl" style="background-color:#2b303b;color:#c0c5ce;" class="language-wgsl "><code class="language-wgsl" data-lang="wgsl"><span>fn getShadow(coords: vec2&lt;f32&gt;, compare: f32) -&gt; f32 {
+</span><span>    let texelSize = 1.0 / 1024.0;
+</span><span>    let bias = 0.02; 
+</span><span>    var shadow = 0.0;
+</span><span>    for (var y = -2; y &lt;= 2; y += 1) {
+</span><span>        for (var x = -2; x &lt;= 2; x += 1) {
+</span><span>            let offset = vec2&lt;f32&gt;(f32(x), f32(y)) * texelSize;
+</span><span>            shadow += textureSampleCompare(
+</span><span>                depth_texture, 
+</span><span>                shadow_sampler, 
+</span><span>                coords + offset, 
+</span><span>                compare - bias
+</span><span>            );
+</span><span>        }
+</span><span>    }
+</span><span>    return shadow / 25.0;
+</span><span>}
+</span></code></pre>
+<h2 id="diao-shi-ji-qiao">调试技巧</h2>
+<p>阴影映射的调试可能很困难，以下是我发现的一些有用的调试技巧：</p>
+<ol>
+<li><strong>可视化深度纹理</strong> - 将深度纹理直接渲染到屏幕的一部分，帮助识别深度捕获问题</li>
+<li><strong>分开测试</strong> - 先单独测试深度捕获通道，确保深度信息正确</li>
+<li><strong>使用明显的测试案例</strong> - 使用简单、高对比度的场景进行测试</li>
+<li><strong>添加调试输出</strong> - 使用 <code>console_log!</code> 打印关键数据</li>
+<li><strong>检查顶点和索引数量</strong> - 确保数量匹配</li>
+</ol>
+<h2 id="zong-jie-yu-jing-yan-jiao-xun">总结与经验教训</h2>
+<p>实现 WebGPU 阴影映射的几个关键点：</p>
+<ol>
+<li><strong>正确管理索引偏移</strong> - 合并几何体时，索引必须考虑顶点数组偏移</li>
+<li><strong>保持一致的顶点格式</strong> - 所有几何体应使用一致的顶点格式</li>
+<li><strong>正确设置纹理用途</strong> - 深度纹理需要同时支持渲染和采样</li>
+<li><strong>分离渲染通道</strong> - 深度捕获和主场景渲染应在不同通道中完成</li>
+<li><strong>适当的深度偏移</strong> - 使用深度偏移避免阴影痤疮（shadow acne）</li>
+<li><strong>PCF 采样</strong> - 使用 PCF 创建更柔和的阴影</li>
+</ol>
+<p>通过这个项目，我深刻体会到了在 WebGPU 中精确管理图形资源的重要性，特别是顶点数据和索引缓冲区。虽然调试过程耗时，但这些经验对于掌握低级图形编程是非常宝贵的。</p>
+<h2 id="can-kao-zi-yuan">参考资源</h2>
+<p><a href="https://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/">Shadow Mapping 技术论文</a></p>
+<hr />
+<p>希望这篇文章能帮助其他开发者在实现 WebGPU 阴影映射时避免我所遇到的陷阱。</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

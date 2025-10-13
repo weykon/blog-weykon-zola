@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <h1>Admin Dashboard</h1>
+
+    <div class="actions">
+        <a href="/admin/editor" class="btn btn-primary">New Post</a>
+    </div>
+
+    <section class="posts-management">
+        <h2>Recent Posts</h2>
+        <div id="posts-list">
+            Loading...
+        </div>
+    </section>
+</div>
+
+<style>
+.admin-dashboard {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.actions {
+    margin: 2rem 0;
+}
+
+.posts-management {
+    margin-top: 3rem;
+}
+</style>
+
+<script>
+// Load posts via API
+fetch('/api/posts')
+    .then(res => res.json())
+    .then(data => {
+        if (data.success && data.data) {
+            const postsHtml = data.data.map(post => `
+                <div class="post-item">
+                    <h3>${post.title}</h3>
+                    <p>${post.slug}</p>
+                    <div>
+                        <a href="/admin/editor/${post.id}">Edit</a>
+                        <a href="/posts/${post.slug}" target="_blank">View</a>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('posts-list').innerHTML = postsHtml || 'No posts yet.';
+        }
+    })
+    .catch(err => {
+        document.getElementById('posts-list').innerHTML = 'Error loading posts.';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+[package]
+name = "blog-weykon"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Web framework
+axum = { version = "0.7", features = ["macros", "multipart"] }
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["io"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["fs", "trace", "cors"] }
+
+# Database
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-rustls", "macros", "migrate", "chrono", "uuid"] }
+
+# OAuth & Authentication
+oauth2 = "4.4"
+tower-sessions = "0.13"
+tower-sessions-sqlx-store = { version = "0.14", features = ["postgres"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Template engine
+tera = "1.20"
+
+# Markdown rendering
+pulldown-cmark = "0.12"
+syntect = "5.2"  # Syntax highlighting for code blocks
+
+# Environment & Config
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.10", features = ["v4", "serde"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Password hashing (for potential local auth)
+argon2 = "0.5"
+rand = "0.8"
+
+# JWT for authentication
+jsonwebtoken = "9.3"
+
+# HTTP client for OAuth
+reqwest = { version = "0.12", features = ["json"] }
+
+[dev-dependencies]

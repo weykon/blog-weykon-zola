@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「linux」ssh 免登录
+</h2>
+<p class="subtitle"><strong>2022-11-23T17:31:28Z</strong></p>
+<p>只留下流程</p>
+<h2 id="dui-xiang">对象：</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>- 服务器 A 
+</span><span>- 电脑 B
+</span></code></pre>
+<h2 id="zai-dian-nao-bcao-zuo-de">在电脑B操作的</h2>
+<ol>
+<li>生成钥匙对</li>
+</ol>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">ssh-keygen -t</span><span> rsa
+</span></code></pre>
+<ol start="2">
+<li>设置权限</li>
+</ol>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">chmod</span><span> 600 &lt;which is *.pub</span><span style="color:#96b5b4;">\&gt;
+</span></code></pre>
+<ol start="3">
+<li>提交写入 (提交公钥至服务器 A)</li>
+</ol>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">ssh-copy-id -i </span><span>&lt;*.pub&gt; user@server
+</span></code></pre>
+<ol start="4">
+<li>（可选）设置电脑 B ssh配置</li>
+</ol>
+<p>编辑 ~/.ssh/config</p>
+<p>添加</p>
+<pre data-lang="config" style="background-color:#2b303b;color:#c0c5ce;" class="language-config "><code class="language-config" data-lang="config"><span style="color:#bf616a;">Host </span><span>&lt;快速键入的名称&gt;
+</span><span>    </span><span style="color:#bf616a;">HostNmae </span><span>&lt;服务器A地址&gt;
+</span><span>    </span><span style="color:#bf616a;">User </span><span>&lt;登陆服务器A用户名&gt;
+</span><span>    </span><span style="color:#bf616a;">IdentityFile </span><span>&lt;上面生成的两个文件中，没有后缀名的那个&gt;
+</span></code></pre>
+<p>保存后运行</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">ssh </span><span>&lt;快速键入的名称&gt;
+</span><span style="color:#65737e;"># 例如 ssh mysite
+</span></code></pre>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

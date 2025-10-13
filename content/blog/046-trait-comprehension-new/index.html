@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  Rust `trait` 理解
+</h2>
+<p class="subtitle"><strong>2025-01-23T04:02:20Z</strong></p>
+<h2 id="zuo-wei-bei-ai-de-dong-tai-yu-yan-shi-yong-zhe-rustde-traithen-duo-shi-hou-jian-zhi-shi-chao-neng-li">作为悲哀的动态语言使用者，rust的trait很多时候简直是超能力</h2>
+<p>关于一点trait的中高级使用</p>
+<p>从一个输入的泛型打开一个新的域面，这个T需要执行的内容接一些函数定义，
+并且可以继续从trait中定义类中类，也就是关联类型，
+从类中类的关系中，可显式联系上了变量类型，既能都函数中继续操作
+然后就是为这个T去满足这一系列的关系。</p>
+<p>对于从第一元素实现的过程，我需要一个元组的多层支持，那么我需要意识到，
+关于(..)的实现，(T),(T1,T2),(T1,T2,T3) 作为需要实现的内容
+impl * for <these T>
+那么这个T的特征，需要接合一个基本入口，解名为 TupleEntry 吧</p>
+<pre data-lang="rs" style="background-color:#2b303b;color:#c0c5ce;" class="language-rs "><code class="language-rs" data-lang="rs"><span style="color:#b48ead;">impl </span><span>TupleEntry </span><span style="color:#b48ead;">for</span><span> (T1,T2) {
+</span><span>   </span><span style="color:#65737e;">// 那么其实在此不保证任何东西，接合一个函数，
+</span><span>   </span><span style="color:#65737e;">// 而对于T的内容还没有更多的具体的内容，
+</span><span>   </span><span style="color:#65737e;">// 目前只标记了对于元组这样的，对应了这个trait进行了链接
+</span><span>   </span><span style="color:#65737e;">// 然后更多的是函数应用T的部分
+</span><span>}
+</span></code></pre>
+<p>关于T可以另外的 T : ?? + ** 这样继续定义需要的标记或者操作
+然后这个时候，一旦对T进行了impl的内容了，就从一开始T的多方向的延伸了</p>
+<p>从类型的关系图上去尝试理解
+对于一个T本身作为了泛型，如果参入了一些Trait的实现，那么同排地，又对应了另外的Trait
+对他们同时放在桌面上，也就是同一个T下两份的Trait上可以同时可以指引得到。</p>
+<p>需要聚焦的是定义之后的泛型实现层</p>
+<p>最主要的是懂得关于泛型类型的条件化处理
+https://doc.rust-lang.org/stable/book/ch10-02-traits.html#using-trait-bounds-to-conditionally-implement-methods</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「fix」MacOS python 路径问题
+</h2>
+<p class="subtitle"><strong>2022-11-09T04:08:53Z</strong></p>
+<p>有一些npm包里面使用着python对应macos的旧路径，
+而新版本的苹果系统不再内置2.*的python。
+所以路径上<code>/usr/bin/python</code>会找不到程序。</p>
+<p>SIP的限制，用户拥有写入权限比较麻烦。</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">Error:</span><span> Can&#39;</span><span style="color:#a3be8c;">t find Python executable \&quot;/usr/bin/python\&quot;, you can set the PYTHON env variable.
+</span></code></pre>
+<h2 id="jie-jue-fang-an">解决方案：</h2>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">$</span><span> brew install pyenv
+</span><span>
+</span><span style="color:#65737e;"># Any modern version python should do. I don&#39;t think Python 2 is required any more.
+</span><span style="color:#bf616a;">$</span><span> pyenv install 3.10.3
+</span><span style="color:#bf616a;">$</span><span> pyenv global 3.10.3
+</span><span>
+</span><span style="color:#65737e;"># Add pyenv to your PATH so that you can reference python (not python3)
+</span><span style="color:#bf616a;">$</span><span> echo &quot;</span><span style="color:#a3be8c;">export PATH=</span><span style="color:#96b5b4;">\&quot;\$</span><span style="color:#a3be8c;">{HOME}/.pyenv/shims:</span><span style="color:#96b5b4;">\$</span><span style="color:#a3be8c;">{PATH}</span><span style="color:#96b5b4;">\&quot;</span><span>&quot; &gt;&gt; </span><span style="color:#bf616a;">~</span><span>/.zshrc
+</span><span>
+</span><span style="color:#65737e;"># open a new terminal window and confirm your pyenv version is mapped to python
+</span><span style="color:#bf616a;">$</span><span> which python
+</span><span style="color:#bf616a;">$</span><span> python</span><span style="color:#bf616a;"> --version
+</span><span>
+</span><span style="color:#65737e;"># Now try to re-run yarn install
+</span><span style="color:#bf616a;">$</span><span> yarn
+</span></code></pre>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

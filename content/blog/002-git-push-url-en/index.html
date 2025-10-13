@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「git-push-url」Push multiple repositories (en)
+</h2>
+<p class="subtitle"><strong>2022-08-01T10:20:05Z</strong></p>
+<p>when we want to push multiple repo:</p>
+<ul>
+<li>
+<p>multiple remote (the commonly used： git remote add origin &lt;git_repo_url&gt;)</p>
+</li>
+<li>
+<p>multiple urls below same remote (similarly: git remote set-url origin &lt;git_repo_url&gt;)</p>
+</li>
+</ul>
+<p>In "set-url" can't add urls, it just replace url.</p>
+<p>The purpose of this tool is to simply add urls, and yes, it is that simple.</p>
+<h2 id="use-for">Use For</h2>
+<p>Push multiple repositories</p>
+<h2 id="usage">Usage</h2>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>npm i git-push-url -g
+</span><span>git-push-url add https://github.com/user/repo.git
+</span><span>#or
+</span><span>git-push-url remove https://github.com/user/repo.git
+</span></code></pre>
+<h2 id="principle">Principle</h2>
+<blockquote>
+<p>Changed the remote content in the <strong>"./.git/config"</strong> file in the current directory, adding or removing the URL.</p>
+</blockquote>
+<p>Welcome to contribute.</p>
+<p>github: https://github.com/weykon/git-push-url</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

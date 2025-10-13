@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  Trait Upcasting
+</h2>
+<p class="subtitle"><strong>2025-04-03T17:52:56.003Z</strong></p>
+<p>原文：</p>
+<blockquote>
+<p>Trait upcasting
+This release includes a long awaited feature — the ability to upcast trait objects. If a trait has a supertrait you can coerce a reference to said trait object to a reference to a trait object of &gt; the supertrait:</p>
+<p>trait Trait: Supertrait {}
+trait Supertrait {}</p>
+<p>fn upcast(x: &amp;dyn Trait) -&gt; &amp;dyn Supertrait {
+&gt; x
+}
+The same would work with any other kind of (smart-)pointer, like Arc<dyn Trait> -&gt; Arc<dyn Supertrait> or *const dyn Trait -&gt; *const dyn Supertrait.</p>
+<p>Previously this would have required a workaround in the form of an upcast method in the Trait itself, for example fn as_supertrait(&amp;self) -&gt; &amp;dyn Supertrait, and this would work only for one kind &gt; of reference/pointer. Such workarounds are not necessary anymore.</p>
+<p>Note that this means that raw pointers to trait objects carry a non-trivial invariant: "leaking" a raw pointer to a trait object with an invalid vtable into safe code may lead to undefined &gt; behavior. It is not decided yet whether creating such a raw pointer temporarily in well-controlled circumstances causes immediate undefined behavior, so code should refrain from creating such &gt; pointers under any conditions (and Miri enforces that).</p>
+<p>Trait upcasting may be especially useful with the Any trait, as it allows upcasting your trait object to dyn Any to call Any's downcast methods, without adding any trait methods or using external &gt; crates.</p>
+<p>use std::any::Any;</p>
+<p>trait MyAny: Any {}</p>
+<p>impl dyn MyAny {
+&gt; fn downcast_ref<T>(&amp;self) -&gt; Option&lt;&amp;T&gt; {
+&gt; (self as &amp;dyn Any).downcast_ref()
+&gt; }
+}
+You can learn more about trait upcasting in the Rust reference.</p>
+</blockquote>
+<h1 id="trait-xiang-shang-zhuan-huan-trait-upcasting-de-zhong-wen-fan-yi-yu-shi-yong-shi-li">Trait 向上转换（Trait Upcasting）的中文翻译与实用示例</h1>
+<p>下面是原文的中文翻译：</p>
+<h2 id="trait-xiang-shang-zhuan-huan">Trait 向上转换</h2>
+<p>这个版本包含了一个期待已久的特性 — 向上转换 trait 对象的能力。如果一个 trait 有一个父 trait，你可以将该 trait 对象的引用强制转换为父 trait 对象的引用：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">trait </span><span>Trait: Supertrait {}
+</span><span style="color:#b48ead;">trait </span><span>Supertrait {}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">upcast</span><span>(</span><span style="color:#bf616a;">x</span><span>: &amp;dyn Trait) -&gt; &amp;dyn Supertrait {
+</span><span>    x
+</span><span>}
+</span></code></pre>
+<p>同样的操作适用于任何其他类型的（智能）指针，如 <code>Arc&lt;dyn Trait&gt; -&gt; Arc&lt;dyn Supertrait&gt;</code> 或 <code>*const dyn Trait -&gt; *const dyn Supertrait</code>。</p>
+<p>以前，这需要在 Trait 本身中添加一个向上转换方法作为变通方法，例如 <code>fn as_supertrait(&amp;self) -&gt; &amp;dyn Supertrait</code>，而且这只适用于一种引用/指针类型。现在这些变通方法不再需要了。</p>
+<p>请注意，这意味着指向 trait 对象的原始指针携带着一个非平凡的不变性："泄漏"一个带有无效 vtable 的 trait 对象的原始指针到安全代码中可能导致未定义行为。目前尚未确定在受控情况下临时创建此类原始指针是否会立即导致未定义行为，因此代码应避免在任何条件下创建此类指针（Miri 会强制执行这一点）。</p>
+<p>Trait 向上转换对于 <code>Any</code> trait 特别有用，因为它允许将你的 trait 对象向上转换为 <code>dyn Any</code> 以调用 Any 的 downcast 方法，而无需添加任何 trait 方法或使用外部 crate。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::any::Any;
+</span><span>
+</span><span style="color:#b48ead;">trait </span><span>MyAny: Any {}
+</span><span>
+</span><span style="color:#b48ead;">impl </span><span>dyn MyAny {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">downcast_ref</span><span>&lt;T&gt;(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; Option&lt;&amp;T&gt; {
+</span><span>        (</span><span style="color:#bf616a;">self </span><span>as &amp;dyn Any).</span><span style="color:#96b5b4;">downcast_ref</span><span>()
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>你可以在 Rust 参考文档中了解更多关于 trait 向上转换的信息。</p>
+<h2 id="shi-yong-shi-li-wei-shen-me-trait-upcasting-hen-you-yong">实用示例：为什么 Trait Upcasting 很有用</h2>
+<p>让我们通过一个更复杂的示例来展示这个特性的实用性：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::fmt::Debug;
+</span><span>
+</span><span style="color:#65737e;">// 基础trait定义基本行为
+</span><span style="color:#b48ead;">trait </span><span>Animal: Debug {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">name</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">str</span><span>;
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">make_sound</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">str</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 更专门化的子trait
+</span><span style="color:#b48ead;">trait </span><span>Pet: Animal {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">owner</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">str</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 具体实现
+</span><span style="color:#b48ead;">struct </span><span>Dog {
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: String,
+</span><span>    </span><span style="color:#bf616a;">owner_name</span><span>: String,
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">impl </span><span>Animal </span><span style="color:#b48ead;">for </span><span>Dog {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">name</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">str </span><span>{
+</span><span>        &amp;</span><span style="color:#bf616a;">self</span><span>.name
+</span><span>    }
+</span><span>    
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">make_sound</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">str </span><span>{
+</span><span>        &quot;</span><span style="color:#a3be8c;">Woof!</span><span>&quot;
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">impl </span><span>Pet </span><span style="color:#b48ead;">for </span><span>Dog {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">owner</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; &amp;</span><span style="color:#b48ead;">str </span><span>{
+</span><span>        &amp;</span><span style="color:#bf616a;">self</span><span>.owner_name
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">impl </span><span>Debug </span><span style="color:#b48ead;">for </span><span>Dog {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">fmt</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">f</span><span>: &amp;</span><span style="color:#b48ead;">mut </span><span>std::fmt::Formatter&lt;&#39;_&gt;) -&gt; std::fmt::Result {
+</span><span>        write!(f, &quot;</span><span style="color:#a3be8c;">Dog </span><span style="color:#96b5b4;">{{</span><span style="color:#a3be8c;"> name: </span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;">, owner: </span><span style="color:#d08770;">{} </span><span style="color:#96b5b4;">}}</span><span>&quot;, </span><span style="color:#bf616a;">self</span><span>.name, </span><span style="color:#bf616a;">self</span><span>.owner_name)
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 动物庇护所功能 - 只关心基本的Animal特性
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">describe_animal</span><span>(</span><span style="color:#bf616a;">animal</span><span>: &amp;dyn Animal) {
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">这是一只名叫</span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;">的动物，它发出</span><span style="color:#96b5b4;">\&quot;</span><span style="color:#d08770;">{}</span><span style="color:#96b5b4;">\&quot;</span><span style="color:#a3be8c;">的声音</span><span>&quot;, animal.</span><span style="color:#96b5b4;">name</span><span>(), animal.</span><span style="color:#96b5b4;">make_sound</span><span>());
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 宠物登记功能 - 需要Pet特性
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">register_pet</span><span>(</span><span style="color:#bf616a;">pet</span><span>: &amp;dyn Pet) {
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">登记宠物：</span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;"> - 主人：</span><span style="color:#d08770;">{}</span><span>&quot;, pet.</span><span style="color:#96b5b4;">name</span><span>(), pet.</span><span style="color:#96b5b4;">owner</span><span>());
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// 这里可以直接将Pet向上转换为Animal以重用现有功能
+</span><span>    </span><span style="color:#96b5b4;">describe_animal</span><span>(pet); </span><span style="color:#65737e;">// 无需任何显式转换!
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> dog = Dog {
+</span><span>        name: String::from(&quot;</span><span style="color:#a3be8c;">小黄</span><span>&quot;),
+</span><span>        owner_name: String::from(&quot;</span><span style="color:#a3be8c;">小明</span><span>&quot;),
+</span><span>    };
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// 可以将dog作为Pet引用
+</span><span>    </span><span style="color:#b48ead;">let</span><span> pet: &amp;dyn Pet = &amp;dog;
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// 现在可以直接将Pet向上转换为Animal
+</span><span>    </span><span style="color:#b48ead;">let</span><span> animal: &amp;dyn Animal = pet;
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// 使用Animal的功能
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">动物信息: </span><span style="color:#d08770;">{:?}</span><span>&quot;, animal);
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// 或者直接在函数中使用
+</span><span>    </span><span style="color:#96b5b4;">register_pet</span><span>(pet);
+</span><span>}
+</span></code></pre>
+<h3 id="zhu-yao-you-shi">主要优势</h3>
+<ol>
+<li>
+<p><strong>代码简化</strong>：不再需要手动实现转换方法，减少了模板代码。</p>
+</li>
+<li>
+<p><strong>通用性</strong>：适用于多种指针类型（&amp;dyn, Box<dyn>, Arc<dyn>等），一次定义就能在所有地方使用。</p>
+</li>
+<li>
+<p><strong>灵活的类型系统</strong>：可以构建更符合直觉的类型层次结构，支持"is-a"关系。</p>
+</li>
+<li>
+<p><strong>与Any的整合</strong>：特别是与Rust的<code>Any</code> trait结合使用时，可以实现更强大的运行时类型识别功能，而不需要添加额外依赖。</p>
+</li>
+<li>
+<p><strong>代码重用</strong>：高级接口（如<code>Pet</code>）的用户可以无缝访问低级接口（如<code>Animal</code>）的功能，而不需要额外的转换代码。</p>
+</li>
+</ol>
+<p>通过这个特性，Rust进一步完善了其trait系统，使组件之间的交互和代码重用变得更加自然和直接。</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

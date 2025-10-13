@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  react-native-print-webview-by-thermal-printer
+</h2>
+<p class="subtitle"><strong>2023-01-09T10:20:16Z</strong></p>
+<h1 id="dui-yu-zai-react-native-ping-tai-jin-xing-re-min-da-yin-ji-de-da-yin">对于在 react native 平台进行热敏打印机的打印</h1>
+<p>我将处理过、遇到的问题列出来:</p>
+<p>// TODO: 目录索引</p>
+<ul>
+<li>单次传输数据过大，打印机缓存区有限，容易丢失中间数据，这个问题甚至在流行通用包中也存在。</li>
+<li>对于 IOS 和 Android 当中的兼容问题，比想象中并不是非常舒适。</li>
+<li>react native 的生态对于深层次自定义的数据读写修改并不完善，较于nodejs稍显贫乏。</li>
+</ul>
+<p>回看一些最为基础的内容，是对于POS打印协议中，二进制数据作为传输给打印机的命令式数据流程的理解。</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

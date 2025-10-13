@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  045-wgpu-再次出发
+</h2>
+<p class="subtitle"><strong>2024-06-18T03:10:50.107Z</strong></p>
+<p>从wasm-pack直接出一个预设项目</p>
+<p><a href="https://rustwasm.github.io/wasm-pack/installer/">安装wasm-pack</a></p>
+<ul>
+<li><a href="https://rustwasm.github.io/wasm-pack/book">doc</a></li>
+</ul>
+<p>中间继续学习了render_pass和pipeline之间的关系和使用的理解</p>
+<p>很不错，点亮了单色三角形。</p>
+<p>然后我开始去尝试让自己接触绘制一个四面体，里面也有很多模糊的知识边界。</p>
+<p>目前我需要为场景做分支，已经做了wint的keyevent监听，然后就是在surfac configure后面的代码，也就是创建pipeline的地方开始做分支。</p>
+<p>对于四面体，除了ai直接帮我出了顶点坐标和索引数据外，还需要去理解一下关于纹理的知识。</p>
+<h1 id="geng-xin">更新</h1>
+<p>目前已经比较熟练wgpu的基本操作了，对wgpu的最新理解和操作，为此我给自己定义了新的理解模型，更多可以查阅<a href="https://crates.io/crates/ready-paint">rust crate - Ready Paint</a></p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

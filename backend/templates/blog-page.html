@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - Weykon's Blog{% endblock %}
+
+{% block content %}
+<article class="post-detail">
+    <header>
+        <h1>{{ post.title }}</h1>
+        <div class="post-meta">
+            <span>Published: {{ post.created_at | date(format="%Y-%m-%d %H:%M") }}</span>
+            <span>Views: {{ post.view_count }}</span>
+            {% if post.is_ai_generated %}
+            <span class="badge ai-badge">AI Generated</span>
+            {% endif %}
+        </div>
+
+        {% if tags | length > 0 %}
+        <div class="tags">
+            {% for tag in tags %}
+            <a href="/tags/{{ tag.slug }}" class="tag">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </header>
+
+    <div class="post-content">
+        {{ content | safe }}
+    </div>
+
+    <footer class="post-footer">
+        <a href="/posts">← Back to all posts</a>
+    </footer>
+</article>
+
+<style>
+.post-detail {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.post-detail h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    border: none;
+    padding: 0;
+}
+
+.post-meta {
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.tags {
+    margin: 1rem 0;
+}
+
+.tag {
+    display: inline-block;
+    padding: 4px 12px;
+    margin-right: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.tag:hover {
+    background: #667eea;
+    color: white;
+}
+
+.post-content {
+    line-height: 1.8;
+    margin: 2rem 0;
+}
+
+.post-content p {
+    margin-bottom: 1rem;
+    white-space: pre-wrap;
+}
+
+.post-content pre {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.post-content code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+}
+
+.post-footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+}
+</style>
+{% endblock %}

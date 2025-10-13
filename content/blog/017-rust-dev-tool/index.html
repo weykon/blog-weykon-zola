@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「rust」[开发工具集] [Develop tool collections]
+</h2>
+<p class="subtitle"><strong>2022-11-24T02:07:01Z</strong></p>
+<h1 id="cargo-watch">cargo-watch</h1>
+<p>quickly for testing or scripting!</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">cargo</span><span> install cargo-watch
+</span><span>
+</span><span style="color:#65737e;">#usage
+</span><span style="color:#bf616a;">cargo</span><span> watch</span><span style="color:#bf616a;"> -c -q -x</span><span> run
+</span></code></pre>
+<h1 id="cargo-clean-all">cargo-clean-all</h1>
+<p>keep clean workspace!</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">cargo</span><span> clean-all</span><span style="color:#bf616a;"> -i --keep-size</span><span> 10MB
+</span></code></pre>
+<h1 id="cargo-clippy">cargo clippy</h1>
+<p>it is good to write idiomatic code.</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+  
+  
+  <span class="mr-2 badge badge-green">
+    <a href="https://weykon.com/blog/language/rust/">
+      rust
+    </a>
+  </span>
+  
+  
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  MLX LoRA
+</h2>
+<p class="subtitle"><strong>2025-04-20T09:55:09.04Z</strong></p>
+<h1 id="tan-suo-mlxzhong-de-lorawei-diao-cong-li-lun-dao-shi-jian">探索MLX中的LoRA微调：从理论到实践</h1>
+<p>最近我一直在研究如何在Apple Silicon设备上高效微调大型语言模型，发现MLX框架提供的LoRA实现非常优雅。今天想分享我的探索过程和一些思考。</p>
+<h2 id="cong-mnistdao-da-yu-yan-mo-xing-li-jie-lorade-zhi-jue">从MNIST到大语言模型：理解LoRA的直觉</h2>
+<p>刚开始接触LoRA时，我很难直观理解这个技术。直到我想到用MNIST分类这个简单任务来类比：</p>
+<p>假设我们有一个训练好的MNIST分类器，能识别数字0-9。现在想让它识别字母A-J，传统做法是重新训练所有参数。但LoRA的思路是：保持原有知识（边缘、形状识别），只学习新任务特有的部分。</p>
+<p>在MNIST中，这相当于：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>图像 → [冻结的卷积层] → 基础特征提取
+</span><span>       ↓
+</span><span>     [少量LoRA参数] → 新任务适配
+</span><span>       ↓
+</span><span>     字母分类
+</span></code></pre>
+<p>这让我明白了LoRA的核心：<strong>不修改原始权重，而是通过低秩更新来适应新任务</strong>。</p>
+<h2 id="shen-ru-mlxde-lorashi-xian">深入MLX的LoRA实现</h2>
+<p>研究MLX的代码，我发现<code>LoRALinear</code>类实现非常简洁：</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">def </span><span style="color:#96b5b4;">__call__</span><span>(</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">x</span><span>):
+</span><span>    y = </span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">linear</span><span>(x.</span><span style="color:#bf616a;">astype</span><span>(dtype))      </span><span style="color:#65737e;"># 原始路径
+</span><span>    z = (x @ </span><span style="color:#bf616a;">self</span><span>.lora_a) @ </span><span style="color:#bf616a;">self</span><span>.lora_b   </span><span style="color:#65737e;"># LoRA路径（低秩更新）
+</span><span>    </span><span style="color:#b48ead;">return </span><span>y + </span><span style="color:#bf616a;">self</span><span>.scale * z             </span><span style="color:#65737e;"># 组合输出
+</span></code></pre>
+<p>这里有个有趣的问题：为什么只对模型的某些层应用LoRA？特别是在LLM中，为什么主要选择Q和V投影矩阵？</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">for </span><span>l </span><span style="color:#b48ead;">in </span><span>model.model.layers[</span><span style="color:#96b5b4;">len</span><span>(model.model.layers) - args.lora_layers :]:
+</span><span>    l.self_attn.q_proj = LoRALinear.</span><span style="color:#bf616a;">from_linear</span><span>(l.self_attn.q_proj)
+</span><span>    l.self_attn.v_proj = LoRALinear.</span><span style="color:#bf616a;">from_linear</span><span>(l.self_attn.v_proj)
+</span></code></pre>
+<p>经过实验和阅读相关论文，我明白了：</p>
+<ul>
+<li>Q（查询）控制模型关注什么信息</li>
+<li>V（值）控制提取什么内容</li>
+<li>修改这两个矩阵可以高效地调整模型的行为，而无需动K矩阵</li>
+</ul>
+<p>这让我想到了一个比喻：如果将LLM看作一个图书馆查询系统，Q决定我们如何提问，V决定我们能获取哪些信息。通过LoRA，我们可以"调教"这个系统更好地回答特定领域的问题。</p>
+<h2 id="mlxzhong-de-wan-zheng-loragong-zuo-liu">MLX中的完整LoRA工作流</h2>
+<p>在实践中，我发现MLX提供了一套完整的工作流：</p>
+<ol>
+<li><strong>转换</strong>: 使用<code>convert.py</code>将Hugging Face模型转为MLX格式</li>
+<li><strong>微调</strong>: 使用<code>lora.py</code>进行LoRA微调，只训练少量参数</li>
+<li><strong>融合</strong>: 使用<code>fuse.py</code>将LoRA权重融合进原始模型</li>
+</ol>
+<p>最让我惊讶的是参数量的差异。在一个微调实验中：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>总参数: 7000.000M
+</span><span>可训练参数: 2.048M
+</span></code></pre>
+<p>仅使用原始模型0.03%的参数就能实现特定任务的适配！这在我的Mac上意味着可以轻松微调一个原本无法训练的大模型。</p>
+<h2 id="mo-xing-rong-he-de-qiao-miao-zhi-chu">模型融合的巧妙之处</h2>
+<p>最初我以为LoRA只是一种训练技巧，但深入理解后发现它的融合机制非常优雅。在<code>to_linear</code>方法中：</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>lora_b = (</span><span style="color:#bf616a;">self</span><span>.scale * </span><span style="color:#bf616a;">self</span><span>.lora_b.T).</span><span style="color:#bf616a;">astype</span><span>(dtype)
+</span><span>lora_a = </span><span style="color:#bf616a;">self</span><span>.lora_a.T.</span><span style="color:#bf616a;">astype</span><span>(dtype)
+</span><span>fused_linear.weight = weight + lora_b @ lora_a
+</span></code></pre>
+<p>这一步将低秩更新"烘焙"进原始权重，不仅简化了部署，还消除了推理时的计算开销。这让我意识到LoRA不仅是训练时的"节能模式"，也是一种可以无缝过渡到生产环境的技术。</p>
+<h2 id="zong-jie-yu-si-kao">总结与思考</h2>
+<p>探索MLX中的LoRA实现后，我有了新的认识：</p>
+<ol>
+<li>LoRA本质上是一种对大型模型的"针灸"——只在关键点上施加小的改变，却能达到全局调整的效果</li>
+<li>选择正确的参数子集（如Q和V投影）对微调效果至关重要</li>
+<li>参数效率和表现力之间存在妙妙的平衡点</li>
+</ol>
+<p>未来，我还想探索几个问题：</p>
+<ul>
+<li>不同rank值对微调质量和效率的影响</li>
+<li>如何结合LoRA和量化技术达到更极致的优化</li>
+<li>能否将LoRA思想扩展到多模态模型的微调</li>
+</ul>
+<p>MLX的优雅实现让我在Mac上就能体验先进的模型微调技术，这才是真正的"本地AI"应用。</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

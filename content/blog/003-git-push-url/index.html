@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「git-push-url」推送多个仓库
+</h2>
+<p class="subtitle"><strong>2022-08-01T10:20:05Z</strong></p>
+<p>当我们有代码推送到多个仓库：</p>
+<ul>
+<li>
+<p>多个remote （常用的是： git remote add origin &lt;git_repo_url&gt;）</p>
+</li>
+<li>
+<p>同一个remote下多个url （类似的是： git remote set-url origin &lt;git_repo_url&gt;）</p>
+</li>
+</ul>
+<p>在 "set-url" 无法做到添加url，而是替换url。</p>
+<p>这个工具就为了简单添加 url ，没错就是这么简单。</p>
+<h2 id="yong-tu">用途</h2>
+<p>推送多个仓库</p>
+<h2 id="yong-fa">用法</h2>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>npm i git-push-url -g
+</span><span>git-push-url add https://github.com/user/repo.git
+</span><span>#or
+</span><span>git-push-url remove https://github.com/user/repo.git
+</span></code></pre>
+<h2 id="yuan-li">原理</h2>
+<blockquote>
+<p>改变了一下当前目录的 <strong>"./.git/config"</strong> 文件里面的 remote 内容，添加 url 或 删除 url。</p>
+</blockquote>
+<p>欢迎来提 PR 和 issues.</p>
+<p>github: https://github.com/weykon/git-push-url</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

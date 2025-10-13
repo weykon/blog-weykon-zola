@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  「linux」家中常备 linux CL
+</h2>
+<p class="subtitle"><strong>2022-11-23T16:08:59Z</strong></p>
+<blockquote>
+<p>CL (Command Line)</p>
+</blockquote>
+<p>最近对 Linux 有了需要</p>
+<p>以前不擅长记录，现在为此补充一下</p>
+<h2 id="scp">scp</h2>
+<p>scp &lt;from&gt; &lt;to&gt;<br />
+scp -i &lt;pem&gt; &lt;from&gt; &lt;to&gt;</p>
+<h3 id="directory">directory</h3>
+<p>scp -r &lt;from&gt; &lt;to&gt;
+scp -r a_dir root@server:/keep_in_this_dir</p>
+<h2 id="cp">cp</h2>
+<p>cp &lt;from&gt; &lt;to&gt;</p>
+<h2 id="ssh">ssh</h2>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">ssh -i </span><span>&lt;pem</span><span style="color:#96b5b4;">\&gt;</span><span> user@server &lt;&lt;</span><span style="color:#b48ead;">eeooff
+</span><span style="color:#a3be8c;">#############
+</span><span style="color:#a3be8c;"># some code #
+</span><span style="color:#a3be8c;">#############
+</span><span style="color:#a3be8c;">exit
+</span><span style="color:#b48ead;">eeooff
+</span></code></pre>
+<p>关于&lt;&lt; eeooff的含义</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">cmd </span><span>&lt;&lt; </span><span style="color:#b48ead;">text
+</span><span style="color:#a3be8c;"> ...
+</span><span style="color:#a3be8c;"> ...
+</span><span style="color:#a3be8c;"> ...
+</span><span style="color:#a3be8c;"> text
+</span></code></pre>
+<blockquote>
+<p>从命令行读取输入，直到遇到与text相同的行结束。</p>
+</blockquote>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#65737e;">#带参数本地脚本
+</span><span style="color:#bf616a;">ssh</span><span> root@xxx.xxx.xxx.xxx &#39;</span><span style="color:#a3be8c;">bash -s</span><span>&#39; &lt; test.sh helloworld
+</span><span>
+</span><span style="color:#65737e;">#执行远程服务器上的脚本
+</span><span style="color:#bf616a;">ssh</span><span> root@xxx.xxx.xxx.xxx &quot;</span><span style="color:#a3be8c;">/home/nick/test.sh</span><span>&quot;
+</span><span>
+</span><span style="color:#65737e;">#执行远程服务器上带参数的脚本
+</span><span style="color:#bf616a;">ssh</span><span> root@xxx.xxx.xxx.xxx /home/nick/test.sh helloworld
+</span></code></pre>
+<p>或许日后结合nodejs整理一个库，叫space-terminal.</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <link rel="stylesheet" href="https://weykon.com/blog/base.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/main.css">
+  <link rel="stylesheet" href="https://weykon.com/blog/post-list-ul.css">
+  <title>Weykon's Blog</title>
+</head>
+
+<body>
+  <main>
+    <!-- <button id="theme_switcher_btn" hx-trigger="click" hx-ext="log">theme-switcher-btn</button> -->
+    <div class="container">
+      <div class="top-bar">
+        <div class="color-palette-hook">
+          <div class="square" id="square1"></div>
+          <div class="square" id="square2"></div>
+          <div class="square" id="square3"></div>
+          <div class="square" id="square4"></div>
+        </div>
+      </div>
+      
+<h2 class="title">
+  Ready Paint 的 wgpu 代码抽象
+</h2>
+<p class="subtitle"><strong>2025-04-01T16:02:56.15Z</strong></p>
+<h1 id="ready-paint-rusttu-xing-xuan-ran-chou-xiang-zhi-lv">Ready-Paint: Rust图形渲染抽象之旅</h1>
+<h2 id="cong-gai-nian-dao-shi-xian-gou-jian-yi-ge-chou-xiang-de-wgpuxuan-ran-kuang-jia">从概念到实现：构建一个抽象的WGPU渲染框架</h2>
+<p>在深入Rust和图形编程的探索中，我创建了Ready-Paint库——一个WGPU的抽象层。这篇文章记录了我在设计和实现这个库的过程中所获得的经验和洞察，以及如何使用Rust强大的类型系统来解决实际问题。</p>
+<h3 id="bei-jing-yu-dong-ji">背景与动机</h3>
+<p>开始接触WGPU时，我被其强大的跨平台图形渲染能力所吸引，但同时也面临着组织代码和设计良好抽象的挑战。通常的图形渲染流程涉及许多步骤：初始化渲染管线、准备资源、执行渲染命令等。这些步骤需要一个清晰的模型来组织。</p>
+<h3 id="cong-sandyhe-builddao-readyhe-paintde-gai-nian-zhuan-bian">从Sandy和Build到Ready和Paint的概念转变</h3>
+<p>最初，我采用了类似于"Sandy"（准备）和"Build"（构建）的概念模型，但随着项目的发展，我发现这些术语不足以清晰地表达渲染流程的本质。</p>
+<p>于是，我将概念模型重新定义为：</p>
+<ul>
+<li><strong>Ready</strong>：准备渲染所需的资源和状态</li>
+<li><strong>Paint</strong>：执行实际的渲染逻辑</li>
+</ul>
+<p>这种转变使得代码结构更加直观和符合渲染的实际流程。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub trait </span><span>Ready {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">ready</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">data</span><span>: &amp;</span><span style="color:#b48ead;">mut</span><span> HashTypeId2Data, </span><span style="color:#bf616a;">gfx</span><span>: &amp;Gfx);
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">pub trait </span><span>Paint {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">paint</span><span>(</span><span style="color:#bf616a;">data</span><span>: &amp;</span><span style="color:#b48ead;">mut</span><span> HashTypeId2Data, </span><span style="color:#bf616a;">gfx</span><span>: &amp;Gfx);
+</span><span>}
+</span></code></pre>
+<h3 id="shu-ju-guan-li-jie-jian-bevyde-lei-xing-idha-xi-biao">数据管理：借鉴Bevy的类型ID哈希表</h3>
+<p>为了高效地管理渲染资源，我借鉴了Bevy引擎的类型ID哈希表模式。这种模式使用Rust的<code>TypeId</code>作为键，将不同类型的资源存储在同一个哈希表中：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub type </span><span>HashTypeId2Data = HashMap&lt;TypeId, Box&lt;dyn Any&gt;&gt;;
+</span></code></pre>
+<p>这种方法提供了几个关键优势：</p>
+<ol>
+<li>类型安全：资源的检索和存储都基于类型，减少了运行时错误</li>
+<li>灵活性：可以存储任何实现了<code>Any</code> trait的类型</li>
+<li>统一管理：所有资源都集中在一个数据结构中</li>
+</ol>
+<h3 id="jie-yong-jian-cha-tiao-zhan-yu-jie-jue-fang-an">借用检查挑战与解决方案</h3>
+<p>使用哈希表管理资源后，我很快遇到了Rust借用检查的挑战。特别是，当需要同时获取多个资源的不可变和可变引用时，标准的借用规则限制了我的实现：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 这会导致借用检查错误
+</span><span style="color:#b48ead;">let</span><span> resource1 = data.</span><span style="color:#96b5b4;">get</span><span>(&amp;TypeId::of::&lt;Type1&gt;()).</span><span style="color:#96b5b4;">unwrap</span><span>().downcast_ref::&lt;Type1&gt;().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span style="color:#b48ead;">let</span><span> resource2 = data.</span><span style="color:#96b5b4;">get_mut</span><span>(&amp;TypeId::of::&lt;Type2&gt;()).</span><span style="color:#96b5b4;">unwrap</span><span>().downcast_mut::&lt;Type2&gt;().</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span></code></pre>
+<p>为了解决这个问题，我开发了<code>refs_muts</code>系统，这是一个安全抽象，允许同时获取不同类型资源的引用和可变引用：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">refs_muts</span><span>&lt;T: TurpleAccess&gt;(</span><span style="color:#bf616a;">data</span><span>: &amp;</span><span style="color:#b48ead;">mut</span><span> HashTypeId2Data) -&gt; </span><span style="color:#b48ead;">T::</span><span>Output&lt;&#39;_&gt; {
+</span><span>    T::accesss(data)
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 使用示例
+</span><span style="color:#b48ead;">let </span><span>(r1, r2) = refs_muts::&lt;(Ref&lt;Data1&gt;, Mut&lt;Data2&gt;)&gt;(&amp;</span><span style="color:#b48ead;">mut</span><span> data);
+</span></code></pre>
+<p>这个系统使用未安全代码和原始指针来绕过借用检查器的限制，但通过严格的类型检查和断言来确保安全性。</p>
+<h3 id="fan-xing-he-te-zheng-yue-shu-de-shen-ru-tan-suo">泛型和特征约束的深入探索</h3>
+<p>在实现<code>Ref&lt;T&gt;</code>和<code>Mut&lt;T&gt;</code>类型时，我深入探索了Rust泛型系统和特征约束，特别是处理图形上下文类型：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub struct </span><span>Ref&lt;T, G = Gfx&gt;(PhantomData&lt;(T, G)&gt;);
+</span><span style="color:#b48ead;">pub struct </span><span>Mut&lt;T, G = Gfx&gt;(PhantomData&lt;(T, G)&gt;);
+</span></code></pre>
+<p>这种设计允许灵活指定图形上下文类型，默认为<code>Gfx</code>但可以根据需要自定义。这进一步加深了我对Rust类型系统的理解，特别是关于关联类型、泛型默认参数和类型推导的知识。</p>
+<h3 id="dang-qian-ku-jia-gou">当前库架构</h3>
+<p>Ready-Paint现在提供了几个核心组件：</p>
+<ol>
+<li><strong>场景系统</strong>：使用<code>Scene</code>结构管理资源和渲染流程</li>
+<li><strong>特征抽象</strong>：<code>Ready</code>、<code>Paint</code>、<code>Update</code>和<code>Pass</code>特征定义了组件的行为</li>
+<li><strong>数据管理</strong>：类型ID哈希表用于存储和检索资源</li>
+<li><strong>引用系统</strong>：<code>refs_muts</code>提供安全获取多个引用的能力</li>
+</ol>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub struct </span><span>Scene {
+</span><span>    </span><span style="color:#bf616a;">name</span><span>: String,
+</span><span>    </span><span style="color:#bf616a;">res</span><span>: HashMap&lt;TypeId, Box&lt;dyn Any&gt;&gt;,
+</span><span>    </span><span style="color:#bf616a;">readys</span><span>: Vec&lt;TypeId&gt;,
+</span><span>    </span><span style="color:#bf616a;">paints</span><span>: Vec&lt;TypeId&gt;,
+</span><span>    </span><span style="color:#bf616a;">readys_hashmap</span><span>: HashMap&lt;TypeId, Box&lt;dyn FnMut(&amp;</span><span style="color:#b48ead;">mut </span><span>HashMap&lt;TypeId, Box&lt;dyn Any&gt;&gt;, &amp;Gfx)&gt;&gt;,
+</span><span>    </span><span style="color:#bf616a;">paints_hashmap</span><span>: HashMap&lt;TypeId, Box&lt;dyn Fn(&amp;</span><span style="color:#b48ead;">mut </span><span>HashMap&lt;TypeId, Box&lt;dyn Any&gt;&gt;, &amp;Gfx)&gt;&gt;,
+</span><span>}
+</span></code></pre>
+<p>这种设计支持了一个直观的渲染流程，从准备资源到执行渲染命令。</p>
+<h3 id="wei-lai-fang-xiang-yu-gai-jin-ji-hua">未来方向与改进计划</h3>
+<p>虽然Ready-Paint已经提供了有用的抽象，但我计划进一步改进：</p>
+<ol>
+<li><strong>WGPU抽象分离</strong>：使用feature flags将WGPU绑定代码与核心抽象分离，使库更灵活</li>
+<li><strong>用户自定义图形后端</strong>：允许用户自定义<code>Gfx</code>实现，而不是使用内置实现</li>
+<li><strong>优化资源管理</strong>：改进资源创建和管理系统，减少样板代码</li>
+</ol>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// 未来计划：使用特征抽象图形上下文
+</span><span style="color:#b48ead;">pub trait </span><span>GraphicsContext {
+</span><span>    </span><span style="color:#65737e;">// 核心图形操作
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// 允许用户实现自己的图形上下文
+</span><span style="color:#b48ead;">impl </span><span>GraphicsContext </span><span style="color:#b48ead;">for </span><span>CustomGfx {
+</span><span>    </span><span style="color:#65737e;">// 用户实现
+</span><span>}
+</span></code></pre>
+<h2 id="ji-shu-shen-ru-lei-xing-xi-tong-tiao-zhan-yu-jie-jue-fang-an">技术深入：类型系统挑战与解决方案</h2>
+<p>在开发过程中，我遇到了几个有趣的类型系统挑战，这些挑战及其解决方案值得深入分析。</p>
+<h3 id="guan-lian-lei-xing-yu-mo-ren-fan-xing-can-shu">关联类型与默认泛型参数</h3>
+<p>一个特别棘手的问题是如何允许组件指定其所需的图形上下文类型，同时保持接口简单。最初的尝试使用关联类型默认值，但这在当前的Rust稳定版中不受支持：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub trait </span><span>Ready&lt;G = Gfx&gt; {
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Graphics: </span><span style="color:#b48ead;">&#39;static </span><span>= G;  </span><span style="color:#65737e;">// 不稳定特性
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">ready</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">data</span><span>: &amp;</span><span style="color:#b48ead;">mut</span><span> HashTypeId2Data, </span><span style="color:#bf616a;">gfx</span><span>: &amp;G);
+</span><span>}
+</span></code></pre>
+<p>解决方案是使用泛型默认参数和特征绑定的组合：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub trait </span><span>Ready&lt;G = Gfx&gt; {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">ready</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">data</span><span>: &amp;</span><span style="color:#b48ead;">mut</span><span> HashTypeId2Data, </span><span style="color:#bf616a;">gfx</span><span>: &amp;G);
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">pub struct </span><span>Ref&lt;T: Ready&lt;G&gt;, G = Gfx&gt;(PhantomData&lt;(T, G)&gt;);
+</span></code></pre>
+<h3 id="wei-yue-shu-lei-xing-can-shu-wen-ti">未约束类型参数问题</h3>
+<p>在处理泛型函数时，我遇到了"未约束类型参数"错误，这发生在泛型参数在实现中没有被有效使用时：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl</span><span>&lt;T, G: </span><span style="color:#b48ead;">&#39;static</span><span>&gt; DetectGraphics </span><span style="color:#b48ead;">for </span><span>T
+</span><span style="color:#b48ead;">where
+</span><span>    T: Ready&lt;G&gt; + ?Sized,  </span><span style="color:#65737e;">// G 被标记为未约束
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Graphics = G;
+</span><span>}
+</span></code></pre>
+<p>解决方法是添加类型约束或函数使G参数产生实际影响：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl</span><span>&lt;T, G: </span><span style="color:#b48ead;">&#39;static</span><span>&gt; DetectGraphics </span><span style="color:#b48ead;">for </span><span>T
+</span><span style="color:#b48ead;">where
+</span><span>    T: Ready&lt;G&gt; + ?Sized,
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Graphics = G;
+</span><span>    
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">get_graphics_type</span><span>() -&gt; std::any::TypeId {
+</span><span>        std::any::TypeId::of::&lt;G&gt;()
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h3 id="an-quan-chu-li-duo-zhong-jie-yong">安全处理多重借用</h3>
+<p><code>refs_muts</code>系统的核心挑战是如何安全地提供对同一数据结构的多个不同类型的引用。我使用了Rust的类型系统来确保安全性：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl</span><span>&lt;T1, T2&gt; TurpleAccess </span><span style="color:#b48ead;">for</span><span> (T1, T2)
+</span><span style="color:#b48ead;">where
+</span><span>    T1: RefOrMut + </span><span style="color:#b48ead;">&#39;static</span><span>,
+</span><span>    T2: RefOrMut + </span><span style="color:#b48ead;">&#39;static</span><span>,
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Output&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt; = (</span><span style="color:#d08770;">T1</span><span>::Output&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt;, </span><span style="color:#d08770;">T2</span><span>::Output&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt;);
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">accesss</span><span>&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt;(</span><span style="color:#bf616a;">data</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a mut</span><span> HashTypeId2Data) -&gt; </span><span style="color:#b48ead;">Self::</span><span>Output&lt;</span><span style="color:#b48ead;">&#39;a</span><span>&gt; {
+</span><span>        assert_ne!(TypeId::of::&lt;T1&gt;(), TypeId::of::&lt;T2&gt;());
+</span><span>        </span><span style="color:#b48ead;">unsafe </span><span>{
+</span><span>            </span><span style="color:#b48ead;">let</span><span> data_ptr = data as </span><span style="color:#b48ead;">*mut</span><span> HashTypeId2Data;
+</span><span>            (</span><span style="color:#d08770;">T1</span><span>::process(&amp;</span><span style="color:#b48ead;">mut </span><span>*data_ptr), </span><span style="color:#d08770;">T2</span><span>::process(&amp;</span><span style="color:#b48ead;">mut </span><span>*data_ptr))
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>通过在编译时和运行时检查类型不同，这个系统可以安全地提供多个引用。</p>
+<h2 id="jie-lun-yu-xue-xi-shou-huo">结论与学习收获</h2>
+<p>开发Ready-Paint给了我深入理解Rust类型系统和图形编程抽象的机会。我学到了：</p>
+<ol>
+<li><strong>渐进式抽象</strong>：从简单概念开始，逐步细化和改进抽象</li>
+<li><strong>类型驱动设计</strong>：利用Rust的类型系统指导API设计</li>
+<li><strong>安全与灵活性平衡</strong>：在必要时使用未安全代码，但通过类型系统确保安全</li>
+<li><strong>模块化思考</strong>：将渲染流程分解为明确的、可组合的步骤</li>
+</ol>
+<p>这个库虽然仍在发展中，但已经提供了一个有用的学习案例，展示了如何在Rust中构建类型安全的图形渲染抽象。我期待继续改进Ready-Paint，使其成为更强大、更灵活的WGPU抽象层。</p>
+<hr />
+<p>Ready-Paint是一个开源项目，欢迎在<a href="https://github.com/weykon/ready-paint">GitHub</a>上查看源码和示例。我也鼓励有兴趣的开发者提供反馈和贡献，一起改进这个库。</p>
+
+<div>
+  <span class="text-sm leading-5 font-medium text-indigo-600">
+  
+</span>
+</div>
+
+    </div>
+  </main>
+  <script src="https://weykon.com/blog/main.js"></script>
+</body>
+
+</html>

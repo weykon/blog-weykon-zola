@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Mutter - Weykon's Blog{% endblock %}
+
+{% block content %}
+<div class="mutter-detail-container">
+    <article class="mutter-detail">
+        <div class="mutter-content">
+            <p>{{ mutter.content }}</p>
+        </div>
+
+        <div class="mutter-meta">
+            <div class="meta-row">
+                <span class="label">Posted:</span>
+                <span class="value">{{ mutter.created_at | date(format="%Y-%m-%d %H:%M") }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">Length:</span>
+                <span class="value">{{ mutter.content | length }} characters</span>
+            </div>
+            <div class="meta-row">
+                <span class="label">Views:</span>
+                <span class="value">{{ mutter.view_count }}</span>
+            </div>
+        </div>
+
+        <div class="mutter-actions">
+            <a href="/mutters" class="btn btn-back">&larr; Back to all mutters</a>
+        </div>
+    </article>
+</div>
+
+<style>
+.mutter-detail-container {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 2rem;
+    min-height: calc(100vh - 200px);
+}
+
+.mutter-detail {
+    background: #f9f9f9;
+    border-left: 4px solid #667eea;
+    border-radius: 4px;
+    padding: 2rem;
+}
+
+.mutter-content {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.mutter-content p {
+    margin: 0;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.mutter-meta {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.meta-row .label {
+    font-weight: 600;
+    color: #666;
+    min-width: 80px;
+}
+
+.meta-row .value {
+    color: #333;
+}
+
+.mutter-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-back {
+    background: white;
+    color: #667eea;
+    border: 1px solid #667eea;
+}
+
+.btn-back:hover {
+    background: #667eea;
+    color: white;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .mutter-detail-container {
+        padding: 1rem;
+    }
+
+    .mutter-detail {
+        padding: 1.5rem;
+    }
+
+    .mutter-content p {
+        font-size: 1rem;
+    }
+
+    .meta-row {
+        font-size: 0.85rem;
+    }
+
+    .meta-row .label {
+        min-width: 70px;
+    }
+}
+</style>
+{% endblock %}
