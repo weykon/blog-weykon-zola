@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Development
+target/
+.venv/
+venv/
+dev/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Documentation
+*.md
+!README.md
+
+# Scripts (not needed in container)
+scripts/
+content_analysis_report.md
+
+# Uploads (will be mounted as volume)
+backend/static/uploads/
+
+# Temporary files
+*.log
+*.tmp
