@@ -29,9 +29,6 @@ COPY templates ./templates
 COPY static ./static
 COPY .sqlx ./.sqlx
 
-# Install sqlx-cli for running migrations (pinned to compatible version)
-RUN cargo install sqlx-cli --version 0.7.4 --no-default-features --features postgres,rustls
-
 # Build for release with SQLx compile-time checking
 # DATABASE_URL will be provided at build time via docker-compose
 ARG DATABASE_URL
@@ -40,6 +37,9 @@ ENV SQLX_OFFLINE=false
 
 # Build the application
 RUN cargo build --release
+
+# Note: We'll handle migrations at runtime in the application startup
+# instead of using sqlx-cli to avoid edition2024 dependency issues
 
 # Stage 2: Runtime
 FROM debian:bookworm-slim
@@ -64,9 +64,6 @@ COPY --from=builder /build/templates /app/templates
 COPY --from=builder /build/static /app/static
 COPY --from=builder /build/migrations /app/migrations
 
-# Copy sqlx-cli for migrations
-COPY --from=builder /usr/local/cargo/bin/sqlx /usr/local/bin/sqlx
-
 # Create uploads directory
 RUN mkdir -p /app/static/uploads && chown -R appuser:appuser /app
 
@@ -81,5 +78,5 @@ ENV RUST_LOG=info
 ENV APP_HOST=0.0.0.0
 ENV APP_PORT=3000
 
-# Run migrations and start the application
-CMD sqlx migrate run && ./blog-weykon
+# Start the application (migrations are run in main.rs)
+CMD ["./blog-weykon"]
