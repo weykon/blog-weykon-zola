@@ -100,9 +100,15 @@ async fn main() -> anyhow::Result<()> {
         .layer(axum_middleware::from_fn(middleware::dev_auth_bypass))
 
         // Static files
-        .nest_service("/static", ServeDir::new(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("static")
-        ))
+        .nest_service("/static", ServeDir::new({
+            // Use runtime path (current directory) for production
+            if let Ok(current_dir) = std::env::current_dir() {
+                current_dir.join("static")
+            } else {
+                // Fallback to compile-time path for development
+                PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("static")
+            }
+        }))
 
         // Add state and layers
         .with_state(app_state)
