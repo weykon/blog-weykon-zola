@@ -29,11 +29,9 @@ COPY templates ./templates
 COPY static ./static
 COPY .sqlx ./.sqlx
 
-# Build for release with SQLx compile-time checking
-# DATABASE_URL will be provided at build time via docker-compose
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
-ENV SQLX_OFFLINE=false
+# Build for release with SQLx offline mode
+# Use offline mode to avoid needing database connection during build
+ENV SQLX_OFFLINE=true
 
 # Build the application
 RUN cargo build --release

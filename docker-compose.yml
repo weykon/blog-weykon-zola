@@ -26,8 +26,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      args:
-        DATABASE_URL: postgres://${POSTGRES_USER:-blog_user}:${POSTGRES_PASSWORD:-blog_password}@postgres:5432/${POSTGRES_DB:-blog_db}
     container_name: blog_backend
     restart: unless-stopped
     environment:

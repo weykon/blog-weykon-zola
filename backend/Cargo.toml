@@ -46,6 +46,8 @@ thiserror = "1.0"
 # Password hashing (for potential local auth)
 argon2 = "0.5"
 rand = "0.8"
+# Pin base64ct to avoid edition2024 requirement
+base64ct = "=1.6.0"
 
 # JWT for authentication
 jsonwebtoken = "9.3"

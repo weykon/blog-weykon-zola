@@ -49,7 +49,7 @@ fi
 
 # Stop existing containers
 echo "🛑 Stopping existing containers..."
-docker-compose down || true
+docker compose down || true
 
 # Remove old backend image to force rebuild
 echo "🗑️  Removing old backend image..."
@@ -57,10 +57,10 @@ docker rmi blog-weykon-backend 2>/dev/null || true
 
 # Build and start services
 echo "🏗️  Building backend (this may take a while on first run)..."
-docker-compose build --no-cache backend
+docker compose build --no-cache backend
 
 echo "▶️  Starting services..."
-docker-compose up -d
+docker compose up -d
 
 # Wait for services to be healthy
 echo "⏳ Waiting for services to be ready..."
@@ -69,11 +69,11 @@ sleep 10
 # Check service status
 echo ""
 echo "📊 Service Status:"
-docker-compose ps
+docker compose ps
 
 echo ""
 echo "📋 Backend Logs (last 20 lines):"
-docker-compose logs --tail=20 backend
+docker compose logs --tail=20 backend
 
 echo ""
 echo "✅ Deployment complete!"
@@ -83,10 +83,10 @@ echo "   - Backend: http://115.190.29.246:3000"
 echo "   - With Nginx: http://115.190.29.246/"
 echo ""
 echo "💡 Useful commands:"
-echo "   - View logs: ssh douyin 'cd /root/blog.weykon && docker-compose logs -f backend'"
-echo "   - Restart:   ssh douyin 'cd /root/blog.weykon && docker-compose restart backend'"
-echo "   - Stop all:  ssh douyin 'cd /root/blog.weykon && docker-compose down'"
-echo "   - Rebuild:   ssh douyin 'cd /root/blog.weykon && docker-compose up -d --build backend'"
+echo "   - View logs: ssh douyin 'cd /root/blog.weykon && docker compose logs -f backend'"
+echo "   - Restart:   ssh douyin 'cd /root/blog.weykon && docker compose restart backend'"
+echo "   - Stop all:  ssh douyin 'cd /root/blog.weykon && docker compose down'"
+echo "   - Rebuild:   ssh douyin 'cd /root/blog.weykon && docker compose up -d --build backend'"
 ENDSSH
 
 echo ""
