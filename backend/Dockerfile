@@ -29,8 +29,8 @@ COPY templates ./templates
 COPY static ./static
 COPY .sqlx ./.sqlx
 
-# Install sqlx-cli for running migrations
-RUN cargo install sqlx-cli --no-default-features --features postgres,rustls
+# Install sqlx-cli for running migrations (pinned to compatible version)
+RUN cargo install sqlx-cli --version 0.7.4 --no-default-features --features postgres,rustls
 
 # Build for release with SQLx compile-time checking
 # DATABASE_URL will be provided at build time via docker-compose
