@@ -1,0 +1,98 @@
+# Build targets for blog-weykon
+
+# Variables
+PROJECT_NAME = blog-weykon
+DOCKER_IMAGE = $(PROJECT_NAME):latest
+DOCKER_COMPOSE_PROD = docker-compose.prod.yml
+SERVER = douyin
+REMOTE_PATH = /root/blog.weykon
+
+# Colors
+GREEN = \033[0;32m
+YELLOW = \033[1;33m
+NC = \033[0m
+
+.PHONY: help build-docker build-local build-cross upload deploy clean
+
+help:
+	@echo "$(GREEN)Blog Weykon Build Commands$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Docker Build:$(NC)"
+	@echo "  make build-docker       - Build using Dockerfile (on server)"
+	@echo "  make build-optimized    - Build using optimized Dockerfile with caching"
+	@echo ""
+	@echo "$(YELLOW)Local Build:$(NC)"
+	@echo "  make build-local        - Build locally (for Mac arm64)"
+	@echo "  make build-cross        - Cross-compile for Linux x86_64"
+	@echo ""
+	@echo "$(YELLOW)Deployment:$(NC)"
+	@echo "  make upload             - Upload to server using rsync"
+	@echo "  make deploy             - Build and deploy to production"
+	@echo "  make deploy-binary      - Deploy pre-built binary"
+	@echo ""
+	@echo "$(YELLOW)Utilities:$(NC)"
+	@echo "  make clean              - Clean build artifacts"
+	@echo "  make logs               - Show server logs"
+
+# Build using Docker (standard)
+build-docker:
+	@echo "$(GREEN)Building with Docker...$(NC)"
+	ssh $(SERVER) "cd $(REMOTE_PATH) && \
+		docker-compose -f $(DOCKER_COMPOSE_PROD) build"
+
+# Build using optimized Dockerfile
+build-optimized:
+	@echo "$(GREEN)Building with optimized Dockerfile...$(NC)"
+	ssh $(SERVER) "cd $(REMOTE_PATH) && \
+		docker-compose -f docker-compose.prod.yml build \
+		--file backend/Dockerfile.optimized"
+
+# Build locally for Mac
+build-local:
+	@echo "$(GREEN)Building locally for arm64...$(NC)"
+	cd backend && cargo build --release
+	@echo "$(YELLOW)Binary at: backend/target/release/$(PROJECT_NAME)$(NC)"
+
+# Cross-compile for Linux x86_64
+build-cross:
+	@echo "$(GREEN)Cross-compiling for Linux x86_64...$(NC)"
+	@if ! command -v cross &> /dev/null; then \
+		echo "$(YELLOW)Installing cross...$(NC)"; \
+		cargo install cross; \
+	fi
+	cd backend && cross build --release --target x86_64-unknown-linux-musl
+	@echo "$(YELLOW)Binary at: backend/target/x86_64-unknown-linux-musl/release/$(PROJECT_NAME)$(NC)"
+
+# Upload to server
+upload:
+	@echo "$(GREEN)Uploading to server...$(NC)"
+	./upload.sh
+
+# Full deployment
+deploy: upload
+	@echo "$(GREEN)Deploying to production...$(NC)"
+	ssh $(SERVER) "cd $(REMOTE_PATH) && \
+		docker-compose -f $(DOCKER_COMPOSE_PROD) build && \
+		docker-compose -f $(DOCKER_COMPOSE_PROD) up -d"
+	@echo "$(GREEN)Deployment complete!$(NC)"
+
+# Deploy pre-built binary
+deploy-binary: build-cross
+	@echo "$(GREEN)Deploying pre-built binary...$(NC)"
+	rsync -avz backend/target/x86_64-unknown-linux-musl/release/$(PROJECT_NAME) \
+		$(SERVER):$(REMOTE_PATH)/backend/blog-weykon
+	ssh $(SERVER) "cd $(REMOTE_PATH) && \
+		docker-compose -f $(DOCKER_COMPOSE_PROD) restart backend"
+	@echo "$(GREEN)Binary deployed!$(NC)"
+
+# Show logs
+logs:
+	@echo "$(GREEN)Showing server logs...$(NC)"
+	ssh $(SERVER) "cd $(REMOTE_PATH) && \
+		docker-compose -f $(DOCKER_COMPOSE_PROD) logs -f backend"
+
+# Clean build artifacts
+clean:
+	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
+	cd backend && cargo clean
+	@echo "$(GREEN)Clean complete!$(NC)"

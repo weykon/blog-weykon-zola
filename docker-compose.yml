@@ -14,12 +14,47 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blog_user} -d ${POSTGRES_DB:-blog_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - blog_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgres://${POSTGRES_USER:-blog_user}:${POSTGRES_PASSWORD:-blog_password}@postgres:5432/${POSTGRES_DB:-blog_db}
+    container_name: blog_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-blog_user}:${POSTGRES_PASSWORD:-blog_password}@postgres:5432/${POSTGRES_DB:-blog_db}
+      RUST_LOG: ${RUST_LOG:-info}
+      APP_HOST: 0.0.0.0
+      APP_PORT: 3000
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+      DEV_MODE: ${DEV_MODE:-false}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      WECHAT_APP_ID: ${WECHAT_APP_ID:-}
+      WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:-}
+      WECHAT_REDIRECT_URI: ${WECHAT_REDIRECT_URI:-}
+      SESSION_SECRET: ${SESSION_SECRET:-change-this-secret}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-604800}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - ./backend/static/uploads:/app/static/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - blog_network
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -35,6 +70,8 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
       - postgres
+    networks:
+      - blog_network
 
 volumes:
   postgres_data:
@@ -43,5 +80,6 @@ volumes:
     driver: local
 
 networks:
-  default:
+  blog_network:
     name: blog_network
+    driver: bridge
