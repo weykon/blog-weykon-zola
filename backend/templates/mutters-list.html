@@ -66,7 +66,7 @@
                 <span class="divider">•</span>
                 <span class="views">{{ mutter.view_count }} views</span>
                 <span class="divider">•</span>
-                <a href="/mutters/{{ mutter.slug }}" class="permalink">Link</a>
+                <a href="{{ base_path | default(value="") }}/mutters/{{ mutter.slug }}" class="permalink">Link</a>
             </div>
         </article>
         {% endfor %}
@@ -86,7 +86,7 @@
         </div>
         <div class="pagination-controls">
             {% if has_prev %}
-            <a href="/mutters?page={{ prev_page }}" class="pagination-btn">&laquo; Previous</a>
+            <a href="{{ base_path | default(value="") }}/mutters?page={{ prev_page }}" class="pagination-btn">&laquo; Previous</a>
             {% else %}
             <span class="pagination-btn disabled">&laquo; Previous</span>
             {% endif %}
@@ -95,14 +95,14 @@
                 {% if p == page %}
                 <span class="pagination-btn active">{{ p }}</span>
                 {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
-                <a href="/mutters?page={{ p }}" class="pagination-btn">{{ p }}</a>
+                <a href="{{ base_path | default(value="") }}/mutters?page={{ p }}" class="pagination-btn">{{ p }}</a>
                 {% elif p == 2 or p == total_pages - 1 %}
                 <span class="pagination-btn">...</span>
                 {% endif %}
             {% endfor %}
 
             {% if has_next %}
-            <a href="/mutters?page={{ next_page }}" class="pagination-btn">Next &raquo;</a>
+            <a href="{{ base_path | default(value="") }}/mutters?page={{ next_page }}" class="pagination-btn">Next &raquo;</a>
             {% else %}
             <span class="pagination-btn disabled">Next &raquo;</span>
             {% endif %}
@@ -410,6 +410,9 @@
 </style>
 
 <script>
+// Base path for API calls
+const basePath = '{{ base_path | default(value="") | safe }}';
+
 // DOM elements
 const form = document.getElementById('create-mutter-form');
 const contentTextarea = document.getElementById('mutter-content');
@@ -497,11 +500,12 @@ form.addEventListener('submit', async function(e) {
     postBtn.textContent = 'Posting...';
 
     try {
-        const response = await fetch('/api/mutters', {
+        const response = await fetch(basePath + '/api/mutters', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'same-origin',  // Include cookies in the request
             body: JSON.stringify(data),
         });
 

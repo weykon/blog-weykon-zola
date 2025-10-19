@@ -1,10 +1,12 @@
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, Query, State, Request},
     response::Html,
+    http::StatusCode,
 };
 use serde::Deserialize;
 
 use super::AppState;
+use crate::middleware::auth::UserContext;
 
 #[derive(Deserialize)]
 pub struct ListQuery {
@@ -12,11 +14,21 @@ pub struct ListQuery {
     pub limit: Option<i64>,
 }
 
-/// List all mutters (paginated)
+/// List all mutters (paginated) - Only accessible by owner
 pub async fn list(
     State(state): State<AppState>,
     Query(query): Query<ListQuery>,
-) -> Html<String> {
+    request: Request,
+) -> Result<Html<String>, (StatusCode, String)> {
+    // Check if user is the owner (weykonkong@gmail.com)
+    let user_context = request.extensions().get::<UserContext>();
+    if let Some(user) = user_context {
+        if user.email != "weykonkong@gmail.com" {
+            return Err((StatusCode::FORBIDDEN, "Access denied: This content is private".to_string()));
+        }
+    } else {
+        return Err((StatusCode::UNAUTHORIZED, "Authentication required".to_string()));
+    }
     let page = query.page.unwrap_or(1);
     let limit = query.limit.unwrap_or(50); // More items per page for mutters
     let offset = (page - 1) * limit;
@@ -59,14 +71,24 @@ pub async fn list(
         .render("mutters-list.html", &context)
         .unwrap_or_else(|e| format!("Error rendering template: {}", e));
 
-    Html(html)
+    Ok(Html(html))
 }
 
-/// Show a single mutter detail
+/// Show a single mutter detail - Only accessible by owner
 pub async fn detail(
     State(state): State<AppState>,
     Path(slug): Path<String>,
-) -> Html<String> {
+    request: Request,
+) -> Result<Html<String>, (StatusCode, String)> {
+    // Check if user is the owner (weykonkong@gmail.com)
+    let user_context = request.extensions().get::<UserContext>();
+    if let Some(user) = user_context {
+        if user.email != "weykonkong@gmail.com" {
+            return Err((StatusCode::FORBIDDEN, "Access denied: This content is private".to_string()));
+        }
+    } else {
+        return Err((StatusCode::UNAUTHORIZED, "Authentication required".to_string()));
+    }
     // Query mutter by slug
     let mutter = sqlx::query_as::<_, crate::models::Post>(
         "SELECT * FROM posts WHERE slug = $1 AND content_type = 'mutter'"
@@ -91,8 +113,8 @@ pub async fn detail(
             .render("mutter-detail.html", &context)
             .unwrap_or_else(|e| format!("Error rendering template: {}", e));
 
-        Html(html)
+        Ok(Html(html))
     } else {
-        Html("<h1>404 - Mutter Not Found</h1>".to_string())
+        Err((StatusCode::NOT_FOUND, "Mutter not found".to_string()))
     }
 }
