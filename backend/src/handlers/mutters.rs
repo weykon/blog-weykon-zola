@@ -45,7 +45,7 @@ pub async fn list(
     .await
     .unwrap_or_default();
 
-    let mut context = tera::Context::new();
+    let mut context = state.create_context();
     context.insert("mutters", &mutters);
     context.insert("page", &page);
     context.insert("total_pages", &total_pages);
@@ -84,7 +84,7 @@ pub async fn detail(
             .execute(&state.db)
             .await;
 
-        let mut context = tera::Context::new();
+        let mut context = state.create_context();
         context.insert("mutter", &mutter);
 
         let html = state.tera

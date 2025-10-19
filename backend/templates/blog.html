@@ -6,7 +6,7 @@
 <div class="posts-container">
     <div class="posts-header">
         <h1>All Posts</h1>
-        <a href="/admin/editor" class="btn-create-post">
+        <a href="{{ base_path | default(value="") }}/admin/editor" class="btn-create-post">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -22,7 +22,7 @@
     <div class="posts-list">
         {% for post in posts %}
         <article class="post-card">
-            <h2><a href="/posts/{{ post.slug }}">{{ post.title }}</a></h2>
+            <h2><a href="{{ base_path | default(value="") }}/posts/{{ post.slug }}">{{ post.title }}</a></h2>
             {% if post.excerpt %}
             <p>{{ post.excerpt }}</p>
             {% endif %}
@@ -53,7 +53,7 @@
         <div class="flex justify-center items-center gap-2 flex-wrap">
             <!-- Previous Button -->
             {% if has_prev %}
-            <a href="/posts?page={{ prev_page }}"
+            <a href="{{ base_path | default(value="") }}/posts?page={{ prev_page }}"
                class="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-primary hover:text-white hover:border-primary transition-all">
                 ← Previous
             </a>
@@ -68,7 +68,7 @@
                 {% if p == page %}
                 <span class="px-4 py-2 rounded-lg bg-primary text-white font-semibold">{{ p }}</span>
                 {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
-                <a href="/posts?page={{ p }}"
+                <a href="{{ base_path | default(value="") }}/posts?page={{ p }}"
                    class="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-primary hover:text-white hover:border-primary transition-all">
                     {{ p }}
                 </a>
@@ -79,7 +79,7 @@
 
             <!-- Next Button -->
             {% if has_next %}
-            <a href="/posts?page={{ next_page }}"
+            <a href="{{ base_path | default(value="") }}/posts?page={{ next_page }}"
                class="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-primary hover:text-white hover:border-primary transition-all">
                 Next →
             </a>

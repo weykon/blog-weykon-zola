@@ -19,22 +19,29 @@ RUN mkdir -p /usr/local/cargo && \
 # Set working directory
 WORKDIR /build
 
-# Copy manifests
+# Copy manifests first (for better caching)
 COPY Cargo.toml Cargo.lock ./
 
-# Copy source code
+# Create dummy source to build dependencies
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    mkdir -p .sqlx
+
+# Build dependencies only (this layer will be cached)
+ENV SQLX_OFFLINE=true
+RUN cargo build --release && \
+    rm -rf src
+
+# Now copy real source code
 COPY src ./src
 COPY migrations ./migrations
 COPY templates ./templates
 COPY static ./static
 COPY .sqlx ./.sqlx
 
-# Build for release with SQLx offline mode
-# Use offline mode to avoid needing database connection during build
-ENV SQLX_OFFLINE=true
-
-# Build the application
-RUN cargo build --release
+# Build the actual application (dependencies are already cached)
+RUN touch src/main.rs && \
+    cargo build --release
 
 # Note: We'll handle migrations at runtime in the application startup
 # instead of using sqlx-cli to avoid edition2024 dependency issues

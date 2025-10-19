@@ -44,6 +44,9 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-change-this-secret}
       JWT_SECRET: ${JWT_SECRET:-change-this-secret}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-604800}
+      # Proxy configuration for accessing Google APIs
+      HTTP_PROXY: http://107.175.136.185:8888
+      HTTPS_PROXY: http://107.175.136.185:8888
     ports:
       - "${APP_PORT:-3000}:3000"
     volumes:

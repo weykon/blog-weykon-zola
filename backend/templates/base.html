@@ -21,9 +21,9 @@
     </script>
 
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/components.css">
-    <link rel="stylesheet" href="/static/css/matrix-rain.css">
+    <link rel="stylesheet" href="{{ base_path | default(value="") }}/static/css/style.css">
+    <link rel="stylesheet" href="{{ base_path | default(value="") }}/static/css/components.css">
+    <link rel="stylesheet" href="{{ base_path | default(value="") }}/static/css/matrix-rain.css">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,13 +53,14 @@
     <header>
         <nav>
             <div class="container">
-                <a href="/" class="logo">Weykon</a>
+                <a href="{{ base_path | default(value="") }}/" class="logo">Weykon</a>
                 <ul class="nav-links">
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/posts">Posts</a></li>
-                    <li><a href="/mutters">Mutters</a></li>
-                    <li><a href="/tags/database">Tags</a></li>
-                    <li><a href="/admin">Admin</a></li>
+                    <li><a href="{{ base_path | default(value="") }}/">Home</a></li>
+                    <li><a href="{{ base_path | default(value="") }}/posts">Posts</a></li>
+                    <li><a href="{{ base_path | default(value="") }}/mutters">Mutters</a></li>
+                    <li><a href="{{ base_path | default(value="") }}/tags/database">Tags</a></li>
+                    <li><a href="{{ base_path | default(value="") }}/admin">Admin</a></li>
+                    <li><a href="{{ base_path | default(value="") }}/auth/login" class="login-button">Login</a></li>
                 </ul>
             </div>
         </nav>
@@ -75,7 +76,7 @@
         </div>
     </footer>
 
-    <script src="/static/js/main.js"></script>
+    <script src="{{ base_path | default(value="") }}/static/js/main.js"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

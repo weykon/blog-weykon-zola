@@ -17,7 +17,7 @@
         {% if tags | length > 0 %}
         <div class="tags">
             {% for tag in tags %}
-            <a href="/tags/{{ tag.slug }}" class="tag">{{ tag.name }}</a>
+            <a href="{{ base_path | default(value="") }}/tags/{{ tag.slug }}" class="tag">{{ tag.name }}</a>
             {% endfor %}
         </div>
         {% endif %}
@@ -28,7 +28,7 @@
     </div>
 
     <footer class="post-footer">
-        <a href="/posts">← Back to all posts</a>
+        <a href="{{ base_path | default(value="") }}/posts">← Back to all posts</a>
     </footer>
 </article>
 

@@ -56,7 +56,7 @@
         {% for mutter in mutters %}
         <article class="mutter-card">
             <div class="mutter-content">
-                <p>{{ mutter.content }}</p>
+                <p>{{ mutter.content | replace(from="\n", to="<br>") | safe }}</p>
             </div>
 
             <div class="mutter-meta">

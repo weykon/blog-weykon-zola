@@ -7,7 +7,7 @@
     <h1>Admin Dashboard</h1>
 
     <div class="actions">
-        <a href="/admin/editor" class="btn btn-primary">New Post</a>
+        <a href="{{ base_path | default(value="") }}/admin/editor" class="btn btn-primary">New Post</a>
     </div>
 
     <section class="posts-management">
@@ -35,8 +35,11 @@
 </style>
 
 <script>
+// Base path for subdirectory deployment
+const basePath = '{{ base_path | default(value="") }}';
+
 // Load posts via API
-fetch('/api/posts')
+fetch(basePath + '/api/posts')
     .then(res => res.json())
     .then(data => {
         if (data.success && data.data) {
@@ -45,8 +48,8 @@ fetch('/api/posts')
                     <h3>${post.title}</h3>
                     <p>${post.slug}</p>
                     <div>
-                        <a href="/admin/editor/${post.id}">Edit</a>
-                        <a href="/posts/${post.slug}" target="_blank">View</a>
+                        <a href="${basePath}/admin/editor/${post.id}">Edit</a>
+                        <a href="${basePath}/posts/${post.slug}" target="_blank">View</a>
                     </div>
                 </div>
             `).join('');

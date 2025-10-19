@@ -4,7 +4,17 @@ use axum::{
     middleware::Next,
     response::{Response, IntoResponse},
 };
-use crate::services::jwt::{JwtService, Claims};
+use crate::services::jwt::JwtService;
+use serde::{Deserialize, Serialize};
+
+/// User information extracted from JWT for template rendering
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserContext {
+    pub user_id: String,
+    pub email: String,
+    pub username: String,
+    pub is_admin: bool,
+}
 
 /// Authentication middleware with JWT validation
 /// In dev mode, allows access without authentication
@@ -70,6 +80,47 @@ fn extract_token_from_cookie(cookie_str: &str) -> Option<String> {
         }
     }
     None
+}
+
+/// Extract user context from JWT token without blocking access
+/// This middleware adds user information to request extensions if authenticated,
+/// but allows unauthenticated requests to pass through
+pub async fn user_context(
+    headers: HeaderMap,
+    mut request: Request,
+    next: Next,
+) -> Response {
+    let jwt_secret = std::env::var("JWT_SECRET")
+        .unwrap_or_else(|_| "default_jwt_secret_key_change_in_production".to_string());
+    let jwt_service = JwtService::new(&jwt_secret);
+
+    // Try to get token from cookie
+    let token = if let Some(cookie) = headers.get("cookie") {
+        if let Ok(cookie_str) = cookie.to_str() {
+            extract_token_from_cookie(cookie_str)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    // If token exists and is valid, add user context to extensions
+    if let Some(token) = token {
+        if let Ok(claims) = jwt_service.validate_token(&token) {
+            let user_context = UserContext {
+                user_id: claims.sub.clone(),
+                email: claims.email.clone(),
+                username: claims.username.clone(),
+                is_admin: claims.is_admin,
+            };
+            request.extensions_mut().insert(user_context);
+            tracing::debug!("User context added: {}", claims.username);
+        }
+    }
+
+    // Always continue, even if no valid authentication
+    next.run(request).await
 }
 
 /// Optional: Simple API key check for development

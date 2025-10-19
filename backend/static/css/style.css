@@ -59,6 +59,49 @@ nav {
     color: #667eea;
 }
 
+/* Login/Logout buttons in nav */
+.nav-links .btn-login {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.nav-links .btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+.nav-links .btn-logout {
+    padding: 0.5rem 1rem;
+    background: #ef4444;
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.nav-links .btn-logout:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+    color: white;
+}
+
+.nav-links .user-info {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: #f1f5f9;
+    color: #1f2937;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
 /* Main Content */
 main {
     flex: 1 0 auto;

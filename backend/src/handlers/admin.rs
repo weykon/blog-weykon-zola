@@ -7,7 +7,7 @@ use super::AppState;
 
 pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
     // TODO: Add authentication middleware check
-    let mut context = tera::Context::new();
+    let mut context = state.create_context();
     context.insert("title", "Admin Dashboard");
 
     let html = state.tera
@@ -19,7 +19,7 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
 
 pub async fn editor(State(state): State<AppState>) -> Html<String> {
     // New post editor
-    let mut context = tera::Context::new();
+    let mut context = state.create_context();
     context.insert("title", "New Post");
     context.insert("mode", "create");
 
@@ -45,7 +45,7 @@ pub async fn edit_post(
     .flatten();
 
     if let Some(post) = post {
-        let mut context = tera::Context::new();
+        let mut context = state.create_context();
         context.insert("title", "Edit Post");
         context.insert("mode", "edit");
         context.insert("post", &post);

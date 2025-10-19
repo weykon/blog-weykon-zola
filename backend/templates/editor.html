@@ -53,7 +53,7 @@
             <button type="submit" class="btn btn-primary">
                 {% if mode == "edit" %}Update Post{% else %}Create Post{% endif %}
             </button>
-            <a href="/admin" class="btn btn-secondary">Cancel</a>
+            <a href="{{ base_path | default(value="") }}/admin" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>
@@ -117,6 +117,9 @@
 {% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script>
+// Base path for subdirectory deployment
+const basePath = '{{ base_path | default(value="") }}';
+
 // Initialize EasyMDE (SimpleMDE successor)
 const easyMDE = new EasyMDE({
     element: document.getElementById('content'),
@@ -170,7 +173,7 @@ async function uploadImage(editor) {
 
         try {
             // Upload to server
-            const response = await fetch('/api/upload', {
+            const response = await fetch(basePath + '/api/upload', {
                 method: 'POST',
                 body: formData,
             });
@@ -258,7 +261,7 @@ document.getElementById('post-form').addEventListener('submit', async function(e
     };
 
     const mode = "{{ mode | default(value='create') }}";
-    const url = mode === "edit" ? `/api/posts/{% if post %}{{ post.id }}{% endif %}` : '/api/posts';
+    const url = mode === "edit" ? `${basePath}/api/posts/{% if post %}{{ post.id }}{% endif %}` : basePath + '/api/posts';
     const method = mode === "edit" ? 'PUT' : 'POST';
 
     try {
@@ -274,7 +277,7 @@ document.getElementById('post-form').addEventListener('submit', async function(e
 
         if (result.success) {
             alert('Post saved successfully!');
-            window.location.href = '/admin';
+            window.location.href = basePath + '/admin';
         } else {
             alert('Error: ' + result.error);
         }

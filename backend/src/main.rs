@@ -1,5 +1,5 @@
 use axum::{
-    routing::{get, post},
+    routing::{get, post, put},
     Router,
     middleware as axum_middleware,
 };
@@ -55,7 +55,26 @@ async fn main() -> anyhow::Result<()> {
         config: config.clone(),
     };
 
-    // Build router
+    // Build protected routes first
+    let protected_routes = Router::new()
+        // Admin routes (protected with dev mode bypass)
+        .route("/admin", get(handlers::admin::dashboard))
+        .route("/admin/editor", get(handlers::admin::editor))
+        .route("/admin/editor/:id", get(handlers::admin::edit_post))
+        // Protected routes - Mutters (private content)
+        .route("/mutters", get(handlers::mutters::list))
+        .route("/mutters/:slug", get(handlers::mutters::detail))
+        // API routes - Posts (protected with dev mode bypass for write operations)
+        .route("/api/posts", post(handlers::api::create_post))
+        .route("/api/posts/:id", put(handlers::api::update_post).delete(handlers::api::delete_post))
+        // API routes - Mutters (protected with dev mode bypass for write operations)
+        .route("/api/mutters", post(handlers::api::create_mutter))
+        .route("/api/mutters/:id", put(handlers::api::update_mutter).delete(handlers::api::delete_mutter))
+        // API routes - Upload
+        .route("/api/upload", post(handlers::api::upload_image))
+        .layer(axum_middleware::from_fn(middleware::dev_auth_bypass));
+
+    // Build public routes
     let app = Router::new()
         // Public routes - Home
         .route("/", get(handlers::index))
@@ -64,14 +83,11 @@ async fn main() -> anyhow::Result<()> {
         .route("/posts", get(handlers::posts::list))
         .route("/posts/:slug", get(handlers::posts::detail))
 
-        // Public routes - Mutters
-        .route("/mutters", get(handlers::mutters::list))
-        .route("/mutters/:slug", get(handlers::mutters::detail))
-
         // Public routes - Tags
         .route("/tags/:tag", get(handlers::posts::by_tag))
 
         // Auth routes
+        .route("/login", get(|| async { axum::response::Redirect::to("/auth/login") }))
         .route("/auth/login", get(handlers::auth::login_page).post(handlers::auth::login))
         .route("/auth/logout", get(handlers::auth::logout))
         .route("/auth/google", get(handlers::auth::google_login))
@@ -79,25 +95,15 @@ async fn main() -> anyhow::Result<()> {
         .route("/auth/wechat", get(handlers::auth::wechat_login))
         .route("/auth/wechat/callback", get(handlers::auth::wechat_callback))
 
-        // Admin routes (protected with dev mode bypass)
-        .route("/admin", get(handlers::admin::dashboard))
-        .route("/admin/editor", get(handlers::admin::editor))
-        .route("/admin/editor/:id", get(handlers::admin::edit_post))
-        .layer(axum_middleware::from_fn(middleware::dev_auth_bypass))
-
-        // API routes - Posts (protected with dev mode bypass for write operations)
-        .route("/api/posts", get(handlers::api::list_posts).post(handlers::api::create_post))
-        .route("/api/posts/:id", get(handlers::api::get_post).put(handlers::api::update_post).delete(handlers::api::delete_post))
-        .layer(axum_middleware::from_fn(middleware::dev_auth_bypass))
-
-        // API routes - Mutters (protected with dev mode bypass for write operations)
-        .route("/api/mutters", get(handlers::api::list_mutters).post(handlers::api::create_mutter))
-        .route("/api/mutters/:id", get(handlers::api::get_mutter).put(handlers::api::update_mutter).delete(handlers::api::delete_mutter))
-        .layer(axum_middleware::from_fn(middleware::dev_auth_bypass))
-
+        // Public API routes
+        .route("/api/posts", get(handlers::api::list_posts))
+        .route("/api/posts/:id", get(handlers::api::get_post))
+        .route("/api/mutters", get(handlers::api::list_mutters))
+        .route("/api/mutters/:id", get(handlers::api::get_mutter))
         .route("/api/tags", get(handlers::api::list_tags))
-        .route("/api/upload", post(handlers::api::upload_image))
-        .layer(axum_middleware::from_fn(middleware::dev_auth_bypass))
+
+        // Merge protected routes
+        .merge(protected_routes)
 
         // Static files
         .nest_service("/static", ServeDir::new({
@@ -112,6 +118,7 @@ async fn main() -> anyhow::Result<()> {
 
         // Add state and layers
         .with_state(app_state)
+        .layer(axum_middleware::from_fn(middleware::user_context))
         .layer(TraceLayer::new_for_http());
 
     // Start server
