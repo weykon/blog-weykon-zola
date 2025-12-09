@@ -146,6 +146,80 @@ pub async fn logout(State(state): State<AppState>) -> impl IntoResponse {
     )
 }
 
+/// Get current user info from JWT token
+#[derive(Debug, Serialize)]
+pub struct UserInfo {
+    pub user_id: String,
+    pub email: String,
+    pub username: String,
+    pub is_admin: bool,
+    pub picture: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct UserResponse {
+    pub authenticated: bool,
+    pub user: Option<UserInfo>,
+}
+
+pub async fn get_current_user(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+) -> impl IntoResponse {
+    use crate::services::jwt::JwtService;
+
+    // Try to get token from cookie
+    let token = headers
+        .get(axum::http::header::COOKIE)
+        .and_then(|cookie| cookie.to_str().ok())
+        .and_then(|cookie_str| {
+            cookie_str
+                .split(';')
+                .find(|c| c.trim().starts_with("auth_token="))
+                .map(|c| c.trim().trim_start_matches("auth_token=").to_string())
+        });
+
+    if let Some(token) = token {
+        let jwt_secret = std::env::var("JWT_SECRET")
+            .unwrap_or_else(|_| "default_jwt_secret_key_change_in_production".to_string());
+        let jwt_service = JwtService::new(&jwt_secret);
+
+        if let Ok(claims) = jwt_service.validate_token(&token) {
+            // Get user from database to get additional info like picture
+            // Parse user_id from JWT (stored as string)
+            if let Ok(user_id) = claims.sub.parse::<i32>() {
+                if let Ok(user) = sqlx::query!(
+                    r#"
+                    SELECT id, email, username, is_admin, picture
+                    FROM users
+                    WHERE id = $1
+                    "#,
+                    user_id
+                )
+                .fetch_one(&state.db)
+                .await
+                {
+                    return Json(UserResponse {
+                        authenticated: true,
+                        user: Some(UserInfo {
+                            user_id: claims.sub,
+                            email: claims.email,
+                            username: claims.username,
+                            is_admin: claims.is_admin,
+                            picture: user.picture,
+                        }),
+                    });
+                }
+            }
+        }
+    }
+
+    Json(UserResponse {
+        authenticated: false,
+        user: None,
+    })
+}
+
 // OAuth handlers
 
 use axum::extract::Query;

@@ -98,6 +98,7 @@ async fn main() -> anyhow::Result<()> {
         // Public API routes
         .route("/api/posts", get(handlers::api::list_posts))
         .route("/api/posts/:id", get(handlers::api::get_post))
+        .route("/api/user/me", get(handlers::auth::get_current_user))
         .route("/api/mutters", get(handlers::api::list_mutters))
         .route("/api/mutters/:id", get(handlers::api::get_mutter))
         .route("/api/tags", get(handlers::api::list_tags))
