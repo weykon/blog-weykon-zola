@@ -21,9 +21,9 @@
     </script>
 
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="{{ base_path | default(value="") }}/static/css/style.css">
-    <link rel="stylesheet" href="{{ base_path | default(value="") }}/static/css/components.css">
-    <link rel="stylesheet" href="{{ base_path | default(value="") }}/static/css/matrix-rain.css">
+    <link rel="stylesheet" href="{{ base_path | default(value="") | safe }}/static/css/style.css">
+    <link rel="stylesheet" href="{{ base_path | default(value="") | safe }}/static/css/components.css">
+    <link rel="stylesheet" href="{{ base_path | default(value="") | safe }}/static/css/matrix-rain.css">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,14 +53,29 @@
     <header>
         <nav>
             <div class="container">
-                <a href="{{ base_path | default(value="") }}/" class="logo">Weykon</a>
+                <a href="{{ base_path | default(value="") | safe }}/" class="logo">Weykon</a>
                 <ul class="nav-links">
-                    <li><a href="{{ base_path | default(value="") }}/">Home</a></li>
-                    <li><a href="{{ base_path | default(value="") }}/posts">Posts</a></li>
-                    <li><a href="{{ base_path | default(value="") }}/mutters">Mutters</a></li>
-                    <li><a href="{{ base_path | default(value="") }}/tags/database">Tags</a></li>
-                    <li><a href="{{ base_path | default(value="") }}/admin">Admin</a></li>
-                    <li><a href="{{ base_path | default(value="") }}/auth/login" class="login-button">Login</a></li>
+                    <li><a href="{{ base_path | default(value="") | safe }}/">Home</a></li>
+                    <li><a href="{{ base_path | default(value="") | safe }}/posts">Posts</a></li>
+                    <li><a href="{{ base_path | default(value="") | safe }}/mutters">Mutters</a></li>
+                    <li><a href="{{ base_path | default(value="") | safe }}/tags/database">Tags</a></li>
+                    <li><a href="{{ base_path | default(value="") | safe }}/admin">Admin</a></li>
+                    <!-- Login button (shown when not authenticated) -->
+                    <li id="login-nav-item"><a href="{{ base_path | default(value="") | safe }}/auth/login" class="login-button">Login</a></li>
+                    <!-- User menu (shown when authenticated) -->
+                    <li id="user-menu" style="display: none; position: relative;">
+                        <button id="user-menu-button" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px;">
+                            <img id="user-avatar" src="" alt="User" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                            <span id="user-name" style="color: #667eea; font-weight: 500;"></span>
+                        </button>
+                        <div id="user-dropdown" style="display: none; position: absolute; right: 0; top: 100%; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 8px; min-width: 200px; z-index: 1000;">
+                            <div style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                                <div style="font-weight: 600; color: #1f2937;" id="dropdown-name"></div>
+                                <div style="font-size: 14px; color: #6b7280; margin-top: 4px;" id="dropdown-email"></div>
+                            </div>
+                            <a href="{{ base_path | default(value="") | safe }}/auth/logout" style="display: block; padding: 12px; color: #dc2626; text-decoration: none; transition: background 0.2s;">Logout</a>
+                        </div>
+                    </li>
                 </ul>
             </div>
         </nav>
@@ -76,7 +91,11 @@
         </div>
     </footer>
 
-    <script src="{{ base_path | default(value="") }}/static/js/main.js"></script>
+    <script>
+        // Define base path for JavaScript
+        window.basePath = '{{ base_path | default(value="") | safe }}';
+    </script>
+    <script src="{{ base_path | default(value="") | safe }}/static/js/main.js"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
