@@ -11,6 +11,8 @@ pub mod mutters;
 pub mod auth;
 pub mod admin;
 pub mod api;
+pub mod api_frontend;
+pub mod spa;
 
 // Application state shared across handlers
 #[derive(Clone)]

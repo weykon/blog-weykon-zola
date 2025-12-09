@@ -76,18 +76,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Build public routes
     let app = Router::new()
-        // Public routes - Home
-        .route("/", get(handlers::index))
-
-        // Public routes - Posts
-        .route("/posts", get(handlers::posts::list))
-        .route("/posts/:slug", get(handlers::posts::detail))
-
-        // Public routes - Tags
-        .route("/tags/:tag", get(handlers::posts::by_tag))
-
-        // Auth routes
-        .route("/login", get(|| async { axum::response::Redirect::to("/auth/login") }))
+        // Auth routes (must come before SPA catchall)
         .route("/auth/login", get(handlers::auth::login_page).post(handlers::auth::login))
         .route("/auth/logout", get(handlers::auth::logout))
         .route("/auth/google", get(handlers::auth::google_login))
@@ -95,13 +84,13 @@ async fn main() -> anyhow::Result<()> {
         .route("/auth/wechat", get(handlers::auth::wechat_login))
         .route("/auth/wechat/callback", get(handlers::auth::wechat_callback))
 
-        // Public API routes
-        .route("/api/posts", get(handlers::api::list_posts))
-        .route("/api/posts/:id", get(handlers::api::get_post))
+        // Public API routes (frontend-friendly DTOs)
+        .route("/api/posts", get(handlers::api_frontend::list_posts_frontend))
+        .route("/api/posts/:id", get(handlers::api_frontend::get_post_frontend))
         .route("/api/user/me", get(handlers::auth::get_current_user))
-        .route("/api/mutters", get(handlers::api::list_mutters))
-        .route("/api/mutters/:id", get(handlers::api::get_mutter))
-        .route("/api/tags", get(handlers::api::list_tags))
+        .route("/api/mutters", get(handlers::api_frontend::list_mutters_frontend))
+        .route("/api/mutters/:id", get(handlers::api_frontend::get_mutter_frontend))
+        .route("/api/tags", get(handlers::api_frontend::list_tags_frontend))
 
         // Merge protected routes
         .merge(protected_routes)
@@ -116,6 +105,10 @@ async fn main() -> anyhow::Result<()> {
                 PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("static")
             }
         }))
+
+        // SPA catchall - MUST be last
+        // All routes not matching above will serve the React app
+        .fallback(get(handlers::spa::serve_spa))
 
         // Add state and layers
         .with_state(app_state)
