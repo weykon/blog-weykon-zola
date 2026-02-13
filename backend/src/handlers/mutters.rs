@@ -33,9 +33,9 @@ pub async fn list(
     let limit = query.limit.unwrap_or(50); // More items per page for mutters
     let offset = (page - 1) * limit;
 
-    // Query total count (only mutters)
+    // Query total count (only private mutters)
     let total: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM posts WHERE content_type = 'mutter'"
+        "SELECT COUNT(*) FROM posts WHERE content_type = 'mutter' AND is_private = true"
     )
     .fetch_one(&state.db)
     .await
@@ -44,10 +44,10 @@ pub async fn list(
     let total_count = total.0;
     let total_pages = ((total_count as f64) / (limit as f64)).ceil() as i64;
 
-    // Query mutters from database
+    // Query mutters from database (only private mutters)
     let mutters = sqlx::query_as::<_, crate::models::Post>(
         "SELECT * FROM posts
-         WHERE content_type = 'mutter'
+         WHERE content_type = 'mutter' AND is_private = true
          ORDER BY created_at DESC
          LIMIT $1 OFFSET $2"
     )
@@ -89,9 +89,9 @@ pub async fn detail(
     } else {
         return Err((StatusCode::UNAUTHORIZED, "Authentication required".to_string()));
     }
-    // Query mutter by slug
+    // Query mutter by slug (only private mutters)
     let mutter = sqlx::query_as::<_, crate::models::Post>(
-        "SELECT * FROM posts WHERE slug = $1 AND content_type = 'mutter'"
+        "SELECT * FROM posts WHERE slug = $1 AND content_type = 'mutter' AND is_private = true"
     )
     .bind(&slug)
     .fetch_optional(&state.db)

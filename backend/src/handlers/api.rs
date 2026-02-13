@@ -2,6 +2,7 @@ use axum::{
     extract::{Path, Query, State, Multipart, Request},
     http::StatusCode,
     response::Json,
+    Extension,
 };
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -415,6 +416,7 @@ pub async fn list_mutters(
 
 pub async fn create_mutter(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     Json(payload): Json<CreateMutter>,
 ) -> (StatusCode, Json<ApiResponse<Post>>) {
     // Validate
@@ -433,14 +435,29 @@ pub async fn create_mutter(
     let title = payload.generate_title();
     let slug = payload.generate_slug();
 
+    let author_id = match claims.sub.parse::<i32>() {
+        Ok(value) => value,
+        Err(_) => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                Json(ApiResponse {
+                    success: false,
+                    data: None,
+                    error: Some("Invalid user ID".to_string()),
+                }),
+            );
+        }
+    };
+
     let result = sqlx::query_as::<_, Post>(
         "INSERT INTO posts (content_type, title, slug, content, is_draft, author_id)
-         VALUES ('mutter', $1, $2, $3, false, 1)
+         VALUES ('mutter', $1, $2, $3, false, $4)
          RETURNING *"
     )
     .bind(&title)
     .bind(&slug)
     .bind(&payload.content)
+    .bind(author_id)
     .fetch_one(&state.db)
     .await;
 
@@ -497,6 +514,7 @@ pub async fn get_mutter(
 pub async fn update_mutter(
     State(state): State<AppState>,
     Path(id): Path<i32>,
+    Extension(claims): Extension<Claims>,
     Json(payload): Json<UpdateMutter>,
 ) -> Json<ApiResponse<Post>> {
     let mutter = sqlx::query_as::<_, Post>(
@@ -508,6 +526,25 @@ pub async fn update_mutter(
 
     match mutter {
         Ok(Some(mut mutter)) => {
+            let author_id = match claims.sub.parse::<i32>() {
+                Ok(value) => value,
+                Err(_) => {
+                    return Json(ApiResponse {
+                        success: false,
+                        data: None,
+                        error: Some("Invalid user ID".to_string()),
+                    });
+                }
+            };
+
+            if !claims.is_admin && mutter.author_id.unwrap_or(0) != author_id {
+                return Json(ApiResponse {
+                    success: false,
+                    data: None,
+                    error: Some("Access denied: This mutter is private".to_string()),
+                });
+            }
+
             if let Some(content) = payload.content {
                 // Validate length
                 if content.len() > 1000 {
@@ -557,7 +594,52 @@ pub async fn update_mutter(
 pub async fn delete_mutter(
     State(state): State<AppState>,
     Path(id): Path<i32>,
+    Extension(claims): Extension<Claims>,
 ) -> Json<ApiResponse<()>> {
+    let mutter = sqlx::query_as::<_, Post>(
+        "SELECT * FROM posts WHERE id = $1 AND content_type = 'mutter'"
+    )
+    .bind(id)
+    .fetch_optional(&state.db)
+    .await;
+
+    let mutter = match mutter {
+        Ok(Some(mutter)) => mutter,
+        Ok(None) => {
+            return Json(ApiResponse {
+                success: false,
+                data: None,
+                error: Some("Mutter not found".to_string()),
+            });
+        }
+        Err(e) => {
+            return Json(ApiResponse {
+                success: false,
+                data: None,
+                error: Some(e.to_string()),
+            });
+        }
+    };
+
+    let author_id = match claims.sub.parse::<i32>() {
+        Ok(value) => value,
+        Err(_) => {
+            return Json(ApiResponse {
+                success: false,
+                data: None,
+                error: Some("Invalid user ID".to_string()),
+            });
+        }
+    };
+
+    if !claims.is_admin && mutter.author_id.unwrap_or(0) != author_id {
+        return Json(ApiResponse {
+            success: false,
+            data: None,
+            error: Some("Access denied: This mutter is private".to_string()),
+        });
+    }
+
     let result = sqlx::query("DELETE FROM posts WHERE id = $1 AND content_type = 'mutter'")
         .bind(id)
         .execute(&state.db)

@@ -118,7 +118,7 @@
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script>
 // Base path for subdirectory deployment
-const basePath = '{{ base_path | default(value="") }}';
+const basePath = '{{ base_path | default(value="") | safe }}';
 
 // Initialize EasyMDE (SimpleMDE successor)
 const easyMDE = new EasyMDE({

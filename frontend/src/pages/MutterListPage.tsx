@@ -8,6 +8,7 @@ const MutterListPage: React.FC = () => {
   const [mutters, setMutters] = useState<Mutter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const { user } = useAuth();
 
@@ -18,11 +19,16 @@ const MutterListPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
+        setNeedsAuth(false);
         const data = await fetchMutters(page, 50);
         setMutters(data.mutters);
         setTotalPages(Math.ceil(data.total / data.limit));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load mutters');
+      } catch (err: any) {
+        if (err?.response?.status === 401 || err?.message?.includes('401')) {
+          setNeedsAuth(true);
+        } else {
+          setError(err instanceof Error ? err.message : 'Failed to load mutters');
+        }
       } finally {
         setLoading(false);
       }
@@ -41,6 +47,27 @@ const MutterListPage: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (needsAuth) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Mutters</h1>
+        <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="text-5xl mb-4">🔒</div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">需要登录才能查看</h2>
+          <p className="text-gray-500 mb-6">
+            Mutters 是私密的碎碎念空间，登录后可以查看和创建属于你自己的 mutter。
+          </p>
+          <Link
+            to="/login"
+            className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+          >
+            去登录
+          </Link>
+        </div>
       </div>
     );
   }

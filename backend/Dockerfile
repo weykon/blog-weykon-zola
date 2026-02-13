@@ -9,23 +9,16 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Configure Cargo to use Chinese mirrors (for faster builds in China)
-RUN mkdir -p /usr/local/cargo && \
-    echo '[source.crates-io]' > /usr/local/cargo/config.toml && \
-    echo 'replace-with = "ustc"' >> /usr/local/cargo/config.toml && \
-    echo '[source.ustc]' >> /usr/local/cargo/config.toml && \
-    echo 'registry = "sparse+https://mirrors.ustc.edu.cn/crates.io-index/"' >> /usr/local/cargo/config.toml
-
 # Set working directory
 WORKDIR /build
 
 # Copy manifests first (for better caching)
 COPY Cargo.toml Cargo.lock ./
+COPY .sqlx ./.sqlx
 
 # Create dummy source to build dependencies
 RUN mkdir src && \
-    echo "fn main() {}" > src/main.rs && \
-    mkdir -p .sqlx
+    echo "fn main() {}" > src/main.rs
 
 # Build dependencies only (this layer will be cached)
 ENV SQLX_OFFLINE=true
@@ -37,7 +30,6 @@ COPY src ./src
 COPY migrations ./migrations
 COPY templates ./templates
 COPY static ./static
-COPY .sqlx ./.sqlx
 
 # Build the actual application (dependencies are already cached)
 RUN touch src/main.rs && \

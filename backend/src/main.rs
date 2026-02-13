@@ -61,13 +61,16 @@ async fn main() -> anyhow::Result<()> {
         .route("/admin", get(handlers::admin::dashboard))
         .route("/admin/editor", get(handlers::admin::editor))
         .route("/admin/editor/:id", get(handlers::admin::edit_post))
-        // Protected routes - Mutters (private content)
-        .route("/mutters", get(handlers::mutters::list))
-        .route("/mutters/:slug", get(handlers::mutters::detail))
+        // Protected routes - Mutters (COMMENTED OUT - Using React SPA instead)
+        // .route("/mutters", get(handlers::mutters::list))
+        // .route("/mutters/:slug", get(handlers::mutters::detail))
+        // Protected routes - Mutters API (all mutters are private, require authentication)
+        .route("/api/mutters", get(handlers::api_frontend::list_mutters_frontend))
+        .route("/api/mutters/:id", get(handlers::api_frontend::get_mutter_frontend))
         // API routes - Posts (protected with dev mode bypass for write operations)
         .route("/api/posts", post(handlers::api::create_post))
         .route("/api/posts/:id", put(handlers::api::update_post).delete(handlers::api::delete_post))
-        // API routes - Mutters (protected with dev mode bypass for write operations)
+        // API routes - Mutters write operations (protected)
         .route("/api/mutters", post(handlers::api::create_mutter))
         .route("/api/mutters/:id", put(handlers::api::update_mutter).delete(handlers::api::delete_mutter))
         // API routes - Upload
@@ -88,20 +91,31 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/posts", get(handlers::api_frontend::list_posts_frontend))
         .route("/api/posts/:id", get(handlers::api_frontend::get_post_frontend))
         .route("/api/user/me", get(handlers::auth::get_current_user))
-        .route("/api/mutters", get(handlers::api_frontend::list_mutters_frontend))
-        .route("/api/mutters/:id", get(handlers::api_frontend::get_mutter_frontend))
         .route("/api/tags", get(handlers::api_frontend::list_tags_frontend))
+
+        // Public Tera template routes (COMMENTED OUT - Using React SPA instead)
+        // .route("/", get(handlers::index))
+        // .route("/posts", get(handlers::posts::list))
+        // .route("/posts/:slug", get(handlers::posts::detail))
+        // .route("/tags/:tag", get(handlers::posts::by_tag))
 
         // Merge protected routes
         .merge(protected_routes)
 
-        // Static files
+        // React SPA assets (Nginx strips /blog prefix, so backend sees /assets/*)
+        .nest_service("/assets", ServeDir::new({
+            if let Ok(current_dir) = std::env::current_dir() {
+                current_dir.join("static/app/assets")
+            } else {
+                PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("static/app/assets")
+            }
+        }))
+
+        // Old static route for backward compatibility (Tera templates, etc.)
         .nest_service("/static", ServeDir::new({
-            // Use runtime path (current directory) for production
             if let Ok(current_dir) = std::env::current_dir() {
                 current_dir.join("static")
             } else {
-                // Fallback to compile-time path for development
                 PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("static")
             }
         }))
