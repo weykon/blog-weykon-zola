@@ -4,7 +4,7 @@ use axum::{
     middleware::Next,
     response::{Response, IntoResponse},
 };
-use crate::services::jwt::JwtService;
+use crate::services::jwt::{Claims, JwtService};
 use serde::{Deserialize, Serialize};
 
 /// User information extracted from JWT for template rendering
@@ -31,6 +31,15 @@ pub async fn dev_auth_bypass(
     if dev_mode {
         // In dev mode, always allow access
         tracing::debug!("DEV_MODE enabled - bypassing authentication");
+        let dev_claims = Claims {
+            sub: "1".to_string(),
+            email: "dev@local".to_string(),
+            username: "dev".to_string(),
+            is_admin: true,
+            exp: 0,
+            iat: 0,
+        };
+        request.extensions_mut().insert(dev_claims);
         return next.run(request).await;
     }
 

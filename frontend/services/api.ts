@@ -2,7 +2,7 @@
 import { Post, Mutter } from '../types';
 
 // API base URL - will be configured based on environment
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/blog';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 interface ApiResponse<T> {
   success: boolean;

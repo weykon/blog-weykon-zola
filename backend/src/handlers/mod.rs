@@ -25,11 +25,24 @@ pub struct AppState {
 // Helper function to extract base_path from config
 impl AppState {
     pub fn get_base_path(&self) -> String {
-        self.config.base_url
-            .trim_end_matches('/')
-            .rsplit_once('/')
-            .map(|(_, path)| format!("/{}", path))
-            .unwrap_or_else(|| "".to_string())
+        let trimmed = self.config.base_url.trim_end_matches('/');
+
+        if trimmed.is_empty() {
+            return "".to_string();
+        }
+
+        if let Ok(parsed) = url::Url::parse(trimmed) {
+            let path = parsed.path().trim_end_matches('/');
+            if path.is_empty() || path == "/" {
+                "".to_string()
+            } else {
+                path.to_string()
+            }
+        } else if trimmed.starts_with('/') {
+            trimmed.to_string()
+        } else {
+            "".to_string()
+        }
     }
 
     pub fn create_context(&self) -> tera::Context {

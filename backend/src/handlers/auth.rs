@@ -68,10 +68,13 @@ pub async fn login(
                 user.is_admin.unwrap_or(false),
             ) {
                 Ok(token) => {
-                    // Set cookie with token
+                    // Set cookie with token (use base_path for correct routing)
+                    let base_path = state.get_base_path();
+                    let cookie_path = if base_path.is_empty() { "/" } else { &base_path };
                     let cookie = format!(
-                        "auth_token={}; Path=/; HttpOnly; Max-Age={}; SameSite=Lax",
+                        "auth_token={}; Path={}; HttpOnly; Max-Age={}; SameSite=Lax",
                         token,
+                        cookie_path,
                         7 * 24 * 60 * 60 // 7 days
                     );
 
@@ -128,11 +131,16 @@ pub async fn login(
 
 /// Logout handler
 pub async fn logout(State(state): State<AppState>) -> impl IntoResponse {
-    // Clear the auth token cookie
-    let cookie = "auth_token=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax";
+    // Clear the auth token cookie (use base_path for correct routing)
+    let base_path = state.get_base_path();
+    let cookie_path = if base_path.is_empty() { "/" } else { &base_path };
+    let cookie = format!(
+        "auth_token=; Path={}; HttpOnly; Max-Age=0; SameSite=Lax",
+        cookie_path
+    );
 
     // Redirect to base path (e.g., /blog or /)
-    let redirect_path = state.get_base_path();
+    let redirect_path = base_path.clone();
     let redirect_url = if redirect_path.is_empty() {
         "/"
     } else {
@@ -418,19 +426,23 @@ pub async fn google_callback(
         (StatusCode::INTERNAL_SERVER_ERROR, "Failed to generate token".to_string())
     })?;
 
-    // Set cookie and redirect
+    // Get base path for cookie and redirect
+    let base_path = state.get_base_path();
+    let cookie_path = if base_path.is_empty() { "/" } else { &base_path };
+
+    // Set cookie with correct path for subdirectory deployment
     let cookie = format!(
-        "auth_token={}; Path=/; HttpOnly; Max-Age={}; SameSite=Lax",
+        "auth_token={}; Path={}; HttpOnly; Max-Age={}; SameSite=Lax",
         token,
+        cookie_path,
         7 * 24 * 60 * 60 // 7 days
     );
 
     // Redirect to base path (e.g., /blog or /)
-    let redirect_path = state.get_base_path();
-    let redirect_url = if redirect_path.is_empty() {
+    let redirect_url = if base_path.is_empty() {
         "/".to_string()
     } else {
-        redirect_path
+        base_path
     };
 
     Ok((

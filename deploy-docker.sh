@@ -11,6 +11,22 @@ EXCLUDE_FILE="/tmp/rsync-exclude-$$"
 
 echo "🚀 Starting Docker-based deployment to $SERVER..."
 
+echo ""
+echo "🧱 Step 0: Building frontend (Vite -> backend/static/app)..."
+if command -v npm >/dev/null 2>&1; then
+  (
+    cd frontend
+    if [ -f package-lock.json ]; then
+      npm ci
+    else
+      npm install
+    fi
+    npm run build
+  )
+else
+  echo "⚠️  npm not found, skipping frontend build. (This may deploy stale frontend assets.)"
+fi
+
 # Create exclusion list
 cat > "$EXCLUDE_FILE" << 'EXCLUDE'
 .git/
