@@ -167,16 +167,14 @@ pub async fn list_mutters_frontend(
     let limit = query.limit.unwrap_or(50);
     let offset = (page - 1) * limit;
 
-    // Check if user is authenticated
+    // Mutters are private - only show mutters belonging to the authenticated user
     let (query_str, total, mutters) = if let Some(Extension(user_ctx)) = user_context {
-        // User is authenticated - return their private mutters
         let user_id = user_ctx.user_id.parse::<i32>().unwrap_or(0);
 
-        // Get total count of user's mutters (private + public by this user)
+        // Count only this user's mutters
         let count_result = sqlx::query_scalar::<_, i64>(
             "SELECT COUNT(*) FROM posts
-             WHERE content_type = 'mutter'
-             AND (is_private = false OR (is_private = true AND author_id = $1))"
+             WHERE content_type = 'mutter' AND author_id = $1"
         )
         .bind(user_id)
         .fetch_one(&state.db)
@@ -184,11 +182,10 @@ pub async fn list_mutters_frontend(
 
         let total = count_result.unwrap_or(0);
 
-        // Get user's mutters
+        // Get only this user's mutters
         let mutters = sqlx::query_as::<_, Post>(
             "SELECT * FROM posts
-             WHERE content_type = 'mutter'
-             AND (is_private = false OR (is_private = true AND author_id = $1))
+             WHERE content_type = 'mutter' AND author_id = $1
              ORDER BY created_at DESC
              LIMIT $2 OFFSET $3"
         )
@@ -198,31 +195,10 @@ pub async fn list_mutters_frontend(
         .fetch_all(&state.db)
         .await;
 
-        ("authenticated query", total, mutters)
+        ("user mutters query", total, mutters)
     } else {
-        // Not authenticated - only return public mutters
-        let count_result = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM posts
-             WHERE content_type = 'mutter' AND is_private = false"
-        )
-        .fetch_one(&state.db)
-        .await;
-
-        let total = count_result.unwrap_or(0);
-
-        // Get public mutters only
-        let mutters = sqlx::query_as::<_, Post>(
-            "SELECT * FROM posts
-             WHERE content_type = 'mutter' AND is_private = false
-             ORDER BY created_at DESC
-             LIMIT $1 OFFSET $2"
-        )
-        .bind(limit)
-        .bind(offset)
-        .fetch_all(&state.db)
-        .await;
-
-        ("public query", total, mutters)
+        // Not authenticated - return nothing
+        ("unauthenticated", 0i64, Ok(vec![]))
     };
 
     match mutters {
