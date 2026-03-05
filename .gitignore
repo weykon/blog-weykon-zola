@@ -3,6 +3,7 @@ dev/
 
 # Environment variables
 .env
+.env.*
 
 # Rust
 backend/target/
