@@ -79,7 +79,7 @@ pub struct UpdateMutter {
 }
 
 // Constants
-pub const MAX_MUTTER_LENGTH: usize = 1000;
+pub const MAX_MUTTER_LENGTH: usize = 10000;
 pub const MIN_POST_LENGTH: usize = 100;
 
 // Implementation methods
@@ -127,8 +127,11 @@ impl CreateMutter {
     /// Generate title from content preview
     pub fn generate_title(&self) -> String {
         if let Some(title) = &self.title {
-            title.clone()
-        } else {
+            if !title.trim().is_empty() {
+                return title.clone();
+            }
+        }
+        {
             let preview: String = self.content.chars().take(50).collect();
             format!("{}...", preview.trim())
         }
@@ -158,10 +161,10 @@ impl CreateMutter {
 
     /// Validate mutter content
     pub fn validate(&self) -> Result<(), String> {
-        if self.content.is_empty() {
+        if self.content.trim().is_empty() {
             return Err("Content cannot be empty".to_string());
         }
-        if self.content.len() > MAX_MUTTER_LENGTH {
+        if self.content.chars().count() > MAX_MUTTER_LENGTH {
             return Err(format!("Content too long (max {} characters)", MAX_MUTTER_LENGTH));
         }
         Ok(())
