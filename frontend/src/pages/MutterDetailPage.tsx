@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { fetchMutter, Mutter } from '../services/api';
+import { fetchMutter, deleteMutter, Mutter } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const MutterDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [mutter, setMutter] = useState<Mutter | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,12 +82,39 @@ const MutterDetailPage: React.FC = () => {
             <span className="text-sm text-gray-500">
               Last updated: {new Date(mutter.updated_at).toLocaleDateString()}
             </span>
-            <button
-              onClick={() => navigate(-1)}
-              className="text-indigo-600 hover:text-indigo-800"
-            >
-              Go back
-            </button>
+            <div className="flex items-center space-x-4">
+              {user?.email === 'weykonkong@gmail.com' && (
+                <>
+                  <Link
+                    to={`/admin/mutter-editor/${mutter.id}`}
+                    className="text-indigo-600 hover:text-indigo-800"
+                  >
+                    Edit
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      if (window.confirm('Delete this mutter?')) {
+                        try {
+                          await deleteMutter(mutter.id);
+                          navigate('/mutters');
+                        } catch {
+                          alert('Failed to delete mutter');
+                        }
+                      }
+                    }}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => navigate(-1)}
+                className="text-indigo-600 hover:text-indigo-800"
+              >
+                Go back
+              </button>
+            </div>
           </div>
         </footer>
       </article>

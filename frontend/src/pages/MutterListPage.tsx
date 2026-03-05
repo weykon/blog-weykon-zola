@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { fetchMutters, Mutter } from '../services/api';
+import { fetchMutters, deleteMutter, Mutter } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const MutterListPage: React.FC = () => {
@@ -126,7 +126,37 @@ const MutterListPage: React.FC = () => {
 
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <span>{new Date(mutter.created_at).toLocaleDateString()}</span>
-                  <span>{mutter.view_count} views</span>
+                  <div className="flex items-center space-x-3">
+                    <span>{mutter.view_count} views</span>
+                    {user?.email === 'weykonkong@gmail.com' && (
+                      <>
+                        <Link
+                          to={`/admin/mutter-editor/${mutter.id}`}
+                          className="text-indigo-500 hover:text-indigo-700"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (window.confirm('Delete this mutter?')) {
+                              try {
+                                await deleteMutter(mutter.id);
+                                setMutters((prev) => prev.filter((m) => m.id !== mutter.id));
+                              } catch (err) {
+                                alert('Failed to delete mutter');
+                              }
+                            }
+                          }}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </article>
             ))}

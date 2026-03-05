@@ -46,8 +46,9 @@ const MutterEditorPage: React.FC = () => {
         await createMutter(formData);
         navigate('/mutters');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save mutter');
+    } catch (err: any) {
+      const serverMsg = err?.response?.data?.error;
+      setError(serverMsg || (err instanceof Error ? err.message : 'Failed to save mutter'));
     } finally {
       setLoading(false);
     }
