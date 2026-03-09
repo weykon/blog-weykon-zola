@@ -55,3 +55,9 @@ build/
 
 # Spec workflow
 .spec-workflow/
+
+# Playwright artifacts
+.playwright-mcp/
+
+# macOS
+.DS_Store
