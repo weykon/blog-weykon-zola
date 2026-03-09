@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { fetchMutter, createMutter, updateMutter, CreateMutterDto } from '../services/api';
 
 const MutterEditorPage: React.FC = () => {
@@ -11,6 +13,7 @@ const MutterEditorPage: React.FC = () => {
     content: '',
     title: '',
   });
+  const [previewMode, setPreviewMode] = useState<'edit' | 'preview' | 'split'>('split');
 
   useEffect(() => {
     if (id) {
@@ -71,8 +74,42 @@ const MutterEditorPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8">{id ? 'Edit Mutter' : 'Create New Mutter'}</h1>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">{id ? 'Edit Mutter' : 'Create New Mutter'}</h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPreviewMode('edit')}
+            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              previewMode === 'edit'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => setPreviewMode('split')}
+            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              previewMode === 'split'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Split
+          </button>
+          <button
+            onClick={() => setPreviewMode('preview')}
+            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              previewMode === 'preview'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Preview
+          </button>
+        </div>
+      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -97,21 +134,46 @@ const MutterEditorPage: React.FC = () => {
           />
         </div>
 
-        {/* Content */}
-        <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-            Content
-          </label>
-          <textarea
-            id="content"
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            rows={10}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            placeholder="What's on your mind?"
-          />
+        {/* Content with Preview */}
+        <div className={`grid ${previewMode === 'split' ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+          {/* Editor */}
+          {previewMode !== 'preview' && (
+            <div>
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+                Content {previewMode === 'split' && '(Markdown)'}
+              </label>
+              <textarea
+                id="content"
+                name="content"
+                value={formData.content}
+                onChange={handleChange}
+                rows={previewMode === 'split' ? 20 : 15}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
+                placeholder="What's on your mind? (Supports Markdown)"
+              />
+            </div>
+          )}
+
+          {/* Preview */}
+          {previewMode !== 'edit' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Preview
+              </label>
+              <div className="w-full min-h-[300px] px-4 py-2 border border-gray-300 rounded-md bg-gray-50">
+                {formData.content ? (
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {formData.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="text-gray-400 italic">Preview will appear here...</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Actions */}

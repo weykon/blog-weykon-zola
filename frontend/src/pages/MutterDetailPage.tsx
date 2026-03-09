@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { fetchMutter, deleteMutter, Mutter } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -10,6 +12,7 @@ const MutterDetailPage: React.FC = () => {
   const [mutter, setMutter] = useState<Mutter | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'preview' | 'raw'>('preview');
 
   useEffect(() => {
     const loadMutter = async () => {
@@ -65,17 +68,51 @@ const MutterDetailPage: React.FC = () => {
         {mutter.title && (
           <header className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">{mutter.title}</h1>
-            <div className="flex items-center text-sm text-gray-600 space-x-4">
-              <span>{new Date(mutter.created_at).toLocaleDateString()}</span>
-              <span>{mutter.view_count} views</span>
-              {mutter.is_private && (
-                <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">Private</span>
-              )}
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <div className="flex items-center space-x-4">
+                <span>{new Date(mutter.created_at).toLocaleDateString()}</span>
+                <span>{mutter.view_count} views</span>
+                {mutter.is_private && (
+                  <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">Private</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setViewMode('preview')}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    viewMode === 'preview'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  Preview
+                </button>
+                <button
+                  onClick={() => setViewMode('raw')}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    viewMode === 'raw'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  Raw
+                </button>
+              </div>
             </div>
           </header>
         )}
 
-        <div className="prose prose-lg max-w-none whitespace-pre-wrap">{mutter.content}</div>
+        {viewMode === 'preview' ? (
+          <div className="prose prose-lg max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {mutter.content}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 p-4 rounded border border-gray-200 overflow-x-auto">
+            {mutter.content}
+          </pre>
+        )}
 
         <footer className="mt-8 pt-6 border-t border-gray-200">
           <div className="flex justify-between items-center">
