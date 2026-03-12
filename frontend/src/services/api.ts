@@ -79,6 +79,43 @@ export interface CreateMutterDto {
   title?: string;
 }
 
+export interface AiSettings {
+  provider: string;
+  model: string;
+  base_url?: string;
+  has_api_key: boolean;
+  updated_at: string;
+}
+
+export interface UpdateAiSettingsDto {
+  provider: string;
+  model?: string;
+  base_url?: string;
+  api_key?: string;
+}
+
+export interface TranslateMutterDto {
+  title?: string;
+  content: string;
+}
+
+export interface TranslatedMutter {
+  title: string;
+  excerpt: string;
+  content: string;
+  provider: string;
+  model: string;
+}
+
+export interface PublishMutterDto {
+  title?: string;
+  content: string;
+  translated_title?: string;
+  translated_excerpt?: string;
+  translated_content?: string;
+  is_draft?: boolean;
+}
+
 // 用户类型
 export interface User {
   user_id: string;
@@ -239,6 +276,44 @@ export const deleteMutter = async (id: number): Promise<void> => {
   if (!response.data.success) {
     throw new Error(response.data.error || 'Failed to delete mutter');
   }
+};
+
+// ==================== Admin AI API ====================
+
+export const fetchAiSettings = async (): Promise<AiSettings> => {
+  const response: AxiosResponse<ApiResponse<AiSettings>> = await api.get('/admin/ai-settings');
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+  throw new Error(response.data.error || 'Failed to fetch AI settings');
+};
+
+export const updateAiSettings = async (data: UpdateAiSettingsDto): Promise<AiSettings> => {
+  const response: AxiosResponse<ApiResponse<AiSettings>> = await api.put('/admin/ai-settings', data);
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+  throw new Error(response.data.error || 'Failed to update AI settings');
+};
+
+export const translateMutter = async (data: TranslateMutterDto): Promise<TranslatedMutter> => {
+  const response: AxiosResponse<ApiResponse<TranslatedMutter>> = await api.post('/admin/mutters/translate', data);
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+  throw new Error(response.data.error || 'Failed to translate mutter');
+};
+
+export const publishMutterToPost = async (data: PublishMutterDto): Promise<Post> => {
+  const response: AxiosResponse<ApiResponse<Post>> = await api.post('/admin/mutters/publish', data);
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+  throw new Error(response.data.error || 'Failed to publish mutter to post');
 };
 
 // ==================== 标签 API ====================

@@ -56,5 +56,6 @@ jsonwebtoken = "9.3"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 urlencoding = "2.1"
 url = "2.5"
+ai_api_provider = "0.1.0"
 
 [dev-dependencies]

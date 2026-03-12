@@ -6,6 +6,7 @@ interface NavItem {
   label: string;
   path: string;
   requiresAuth?: boolean;
+  requiresAdmin?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -13,7 +14,7 @@ const navItems: NavItem[] = [
   { label: 'Posts', path: '/posts' },
   // Public entry: unauth users see public mutters; authed users see public + own private
   { label: 'Mutters', path: '/mutters' },
-  { label: 'Admin', path: '/admin', requiresAuth: true },
+  { label: 'Admin', path: '/admin', requiresAuth: true, requiresAdmin: true },
 ];
 
 const Navbar: React.FC = () => {
@@ -44,8 +45,10 @@ const Navbar: React.FC = () => {
     setMobileMenuOpen(false);
   };
 
+  const isAdmin = !!user && (user.is_admin || user.email.toLowerCase() === 'weykonkong@gmail.com');
+
   const filteredNavItems = navItems.filter(
-    (item) => !item.requiresAuth || isAuthenticated
+    (item) => (!item.requiresAuth || isAuthenticated) && (!item.requiresAdmin || isAdmin)
   );
 
   return (

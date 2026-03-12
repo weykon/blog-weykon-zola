@@ -7,7 +7,10 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use super::AppState;
-use crate::services::jwt::JwtService;
+use crate::{
+    middleware::is_admin_email,
+    services::jwt::JwtService,
+};
 
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
@@ -42,6 +45,18 @@ pub async fn login(
 ) -> impl IntoResponse {
     let email = payload.email.trim().to_lowercase();
 
+    if !is_admin_email(&email) {
+        return (
+            StatusCode::FORBIDDEN,
+            [(header::SET_COOKIE, String::new())],
+            Json(LoginResponse {
+                success: false,
+                message: "Only the configured owner account can access the admin system.".to_string(),
+                token: None,
+            })
+        );
+    }
+
     // Query user from database
     let user = sqlx::query!(
         r#"
@@ -65,7 +80,7 @@ pub async fn login(
                 &user.id.to_string(),
                 &user.email.unwrap_or_default(),
                 &user.username,
-                user.is_admin.unwrap_or(false),
+                true,
             ) {
                 Ok(token) => {
                     // Set cookie with token (use base_path for correct routing)
@@ -259,6 +274,14 @@ struct GoogleUserInfo {
     picture: Option<String>,
 }
 
+#[derive(Debug, sqlx::FromRow)]
+struct OAuthUserRow {
+    id: i32,
+    email: Option<String>,
+    username: String,
+    is_admin: Option<bool>,
+}
+
 pub async fn google_login(State(state): State<AppState>) -> Redirect {
     let client_id = std::env::var("GOOGLE_CLIENT_ID")
         .unwrap_or_default();
@@ -348,6 +371,14 @@ pub async fn google_callback(
             (StatusCode::INTERNAL_SERVER_ERROR, "Invalid user info response".to_string())
         })?;
 
+    let normalized_email = user_info.email.trim().to_lowercase();
+    if !user_info.verified_email || !is_admin_email(&normalized_email) {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "Only the configured owner Google account can access the admin system".to_string(),
+        ));
+    }
+
     // Check if user exists in database
     let existing_user = sqlx::query!(
         r#"
@@ -356,7 +387,7 @@ pub async fn google_callback(
         WHERE google_id = $1 OR email = $2
         "#,
         user_info.id,
-        user_info.email
+        normalized_email
     )
     .fetch_optional(&state.db)
     .await
@@ -366,17 +397,18 @@ pub async fn google_callback(
     })?;
 
     // Get or create user
-    let (user_id, user_email, username, is_admin) = if let Some(user) = existing_user {
+    let (user_id, user_email, username, _is_admin) = if let Some(user) = existing_user {
         // Update existing user with Google ID if not set
-        sqlx::query!(
+        sqlx::query(
             r#"
             UPDATE users
-            SET google_id = $1, updated_at = NOW()
-            WHERE id = $2
-            "#,
-            user_info.id,
-            user.id
+            SET google_id = $1, email = $2, is_admin = true, updated_at = NOW()
+            WHERE id = $3
+            "#
         )
+        .bind(&user_info.id)
+        .bind(&normalized_email)
+        .bind(user.id)
         .execute(&state.db)
         .await
         .map_err(|e| {
@@ -391,16 +423,16 @@ pub async fn google_callback(
             .unwrap_or("user")
             .to_lowercase();
 
-        let new_user = sqlx::query!(
+        let new_user = sqlx::query_as::<_, OAuthUserRow>(
             r#"
             INSERT INTO users (email, username, google_id, is_admin)
-            VALUES ($1, $2, $3, false)
+            VALUES ($1, $2, $3, true)
             RETURNING id, email, username, is_admin
-            "#,
-            user_info.email,
-            username,
-            user_info.id
+            "#
         )
+        .bind(&normalized_email)
+        .bind(&username)
+        .bind(&user_info.id)
         .fetch_one(&state.db)
         .await
         .map_err(|e| {
@@ -420,7 +452,7 @@ pub async fn google_callback(
         &user_id.to_string(),
         &user_email.unwrap_or_default(),
         &username,
-        is_admin.unwrap_or(false),
+        true,
     ).map_err(|e| {
         tracing::error!("Failed to generate JWT: {:?}", e);
         (StatusCode::INTERNAL_SERVER_ERROR, "Failed to generate token".to_string())

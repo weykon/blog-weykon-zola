@@ -10,6 +10,7 @@ pub mod posts;
 pub mod mutters;
 pub mod auth;
 pub mod admin;
+pub mod admin_api;
 pub mod api;
 pub mod api_frontend;
 pub mod spa;

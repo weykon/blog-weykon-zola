@@ -7,6 +7,8 @@ use axum::{
 use crate::services::jwt::{Claims, JwtService};
 use serde::{Deserialize, Serialize};
 
+pub const ADMIN_EMAIL: &str = "weykonkong@gmail.com";
+
 /// User information extracted from JWT for template rendering
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserContext {
@@ -80,6 +82,34 @@ pub async fn dev_auth_bypass(
     ).into_response()
 }
 
+pub async fn admin_only(
+    request: Request,
+    next: Next,
+) -> Response {
+    let dev_mode = std::env::var("DEV_MODE")
+        .unwrap_or_else(|_| "false".to_string())
+        .to_lowercase() == "true";
+
+    if dev_mode {
+        return next.run(request).await;
+    }
+
+    let is_allowed = request
+        .extensions()
+        .get::<Claims>()
+        .map(|claims| is_admin_email(&claims.email))
+        .unwrap_or(false);
+
+    if is_allowed {
+        return next.run(request).await;
+    }
+
+    (
+        StatusCode::FORBIDDEN,
+        "Admin access is restricted to the configured owner account."
+    ).into_response()
+}
+
 /// Extract JWT token from cookie string
 fn extract_token_from_cookie(cookie_str: &str) -> Option<String> {
     for cookie in cookie_str.split(';') {
@@ -130,6 +160,10 @@ pub async fn user_context(
 
     // Always continue, even if no valid authentication
     next.run(request).await
+}
+
+pub fn is_admin_email(email: &str) -> bool {
+    email.trim().eq_ignore_ascii_case(ADMIN_EMAIL)
 }
 
 /// Optional: Simple API key check for development

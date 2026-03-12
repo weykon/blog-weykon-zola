@@ -61,6 +61,9 @@ async fn main() -> anyhow::Result<()> {
         .route("/admin", get(handlers::admin::dashboard))
         .route("/admin/editor", get(handlers::admin::editor))
         .route("/admin/editor/:id", get(handlers::admin::edit_post))
+        .route("/api/admin/ai-settings", get(handlers::admin_api::get_ai_settings).put(handlers::admin_api::update_ai_settings))
+        .route("/api/admin/mutters/translate", post(handlers::admin_api::translate_mutter))
+        .route("/api/admin/mutters/publish", post(handlers::admin_api::publish_mutter_to_post))
         // Protected routes - Mutters (COMMENTED OUT - Using React SPA instead)
         // .route("/mutters", get(handlers::mutters::list))
         // .route("/mutters/:slug", get(handlers::mutters::detail))
@@ -75,6 +78,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/mutters/:id", put(handlers::api::update_mutter).delete(handlers::api::delete_mutter))
         // API routes - Upload
         .route("/api/upload", post(handlers::api::upload_image))
+        .layer(axum_middleware::from_fn(middleware::admin_only))
         .layer(axum_middleware::from_fn(middleware::dev_auth_bypass));
 
     // Build public routes

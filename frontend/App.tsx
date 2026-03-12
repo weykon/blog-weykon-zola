@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './src/contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import PrivateRoute from './src/components/PrivateRoute';
+import AdminRoute from './src/components/AdminRoute';
 
 // 页面组件
 import HomePage from './src/pages/HomePage';
@@ -38,41 +38,41 @@ function App() {
               <Route
                 path="/admin"
                 element={
-                  <PrivateRoute>
+                  <AdminRoute>
                     <AdminPage />
-                  </PrivateRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/editor"
                 element={
-                  <PrivateRoute>
+                  <AdminRoute>
                     <EditorPage />
-                  </PrivateRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/editor/:id"
                 element={
-                  <PrivateRoute>
+                  <AdminRoute>
                     <EditorPage />
-                  </PrivateRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/mutter-editor"
                 element={
-                  <PrivateRoute>
+                  <AdminRoute>
                     <MutterEditorPage />
-                  </PrivateRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/mutter-editor/:id"
                 element={
-                  <PrivateRoute>
+                  <AdminRoute>
                     <MutterEditorPage />
-                  </PrivateRoute>
+                  </AdminRoute>
                 }
               />
 

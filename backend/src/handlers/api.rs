@@ -92,13 +92,26 @@ pub async fn get_post(
 
 pub async fn create_post(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     Json(payload): Json<CreatePost>,
 ) -> (StatusCode, Json<ApiResponse<Post>>) {
-    // TODO: Add authentication check
+    let author_id = match claims.sub.parse::<i32>() {
+        Ok(value) => value,
+        Err(_) => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                Json(ApiResponse {
+                    success: false,
+                    data: None,
+                    error: Some("Invalid user ID".to_string()),
+                }),
+            );
+        }
+    };
 
     let result = sqlx::query_as::<_, Post>(
-        "INSERT INTO posts (content_type, title, slug, content, excerpt, workspace_id, book_id, is_ai_generated, is_draft, author_id)
-         VALUES ('post', $1, $2, $3, $4, $5, $6, $7, $8, 1)
+        "INSERT INTO posts (content_type, title, slug, content, excerpt, workspace_id, book_id, is_ai_generated, is_draft, is_private, author_id)
+         VALUES ('post', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING *"
     )
     .bind(&payload.title)
@@ -109,6 +122,8 @@ pub async fn create_post(
     .bind(payload.book_id)
     .bind(payload.is_ai_generated)
     .bind(payload.is_draft)
+    .bind(payload.is_private.unwrap_or(false))
+    .bind(author_id)
     .fetch_one(&state.db)
     .await;
 
@@ -155,13 +170,32 @@ pub async fn update_post(
             if let Some(content) = payload.content {
                 post.content = content;
             }
+            if let Some(excerpt) = payload.excerpt {
+                post.excerpt = Some(excerpt);
+            }
+            if let Some(is_draft) = payload.is_draft {
+                post.is_draft = is_draft;
+            }
+            if let Some(is_ai_generated) = payload.is_ai_generated {
+                post.is_ai_generated = is_ai_generated;
+            }
+            if let Some(is_private) = payload.is_private {
+                post.is_private = is_private;
+            }
 
             let updated = sqlx::query_as::<_, Post>(
-                "UPDATE posts SET title = $1, slug = $2, content = $3 WHERE id = $4 RETURNING *"
+                "UPDATE posts
+                 SET title = $1, slug = $2, content = $3, excerpt = $4, is_draft = $5, is_ai_generated = $6, is_private = $7
+                 WHERE id = $8
+                 RETURNING *"
             )
             .bind(&post.title)
             .bind(&post.slug)
             .bind(&post.content)
+            .bind(&post.excerpt)
+            .bind(post.is_draft)
+            .bind(post.is_ai_generated)
+            .bind(post.is_private)
             .bind(id)
             .fetch_one(&state.db)
             .await;

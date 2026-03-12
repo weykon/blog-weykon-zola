@@ -4,7 +4,9 @@ pub mod tag;
 pub mod workspace;
 pub mod book;
 pub mod dto;
+pub mod ai_settings;
 
 pub use post::{Post, ContentType, CreateMutter, UpdateMutter, MAX_MUTTER_LENGTH, MIN_POST_LENGTH};
 pub use tag::Tag;
 pub use dto::{PostDto, MutterDto, PostWithTags};
+pub use ai_settings::{AiSettings, DEFAULT_AI_MODEL, DEFAULT_AI_PROVIDER};
