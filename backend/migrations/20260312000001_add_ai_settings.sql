@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS ai_settings (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Trigger to auto-update updated_at (idempotent)
+DROP TRIGGER IF EXISTS update_ai_settings_updated_at ON ai_settings;
 CREATE TRIGGER update_ai_settings_updated_at BEFORE UPDATE ON ai_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
