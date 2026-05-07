@@ -251,6 +251,42 @@ pub async fn delete_post(
     }
 }
 
+pub async fn get_my_posts(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+) -> Json<ApiResponse<Vec<Post>>> {
+    let user_id: i32 = match claims.sub.parse() {
+        Ok(id) => id,
+        Err(_) => {
+            return Json(ApiResponse {
+                success: false,
+                data: None,
+                error: Some("Invalid user ID".to_string()),
+            });
+        }
+    };
+
+    let posts = sqlx::query_as::<_, Post>(
+        "SELECT * FROM posts WHERE author_id = $1 ORDER BY updated_at DESC"
+    )
+    .bind(user_id)
+    .fetch_all(&state.db)
+    .await;
+
+    match posts {
+        Ok(posts) => Json(ApiResponse {
+            success: true,
+            data: Some(posts),
+            error: None,
+        }),
+        Err(e) => Json(ApiResponse {
+            success: false,
+            data: None,
+            error: Some(e.to_string()),
+        }),
+    }
+}
+
 pub async fn list_tags(State(state): State<AppState>) -> Json<ApiResponse<Vec<Tag>>> {
     let tags = sqlx::query_as::<_, Tag>("SELECT * FROM tags ORDER BY name")
         .fetch_all(&state.db)

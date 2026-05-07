@@ -34,6 +34,7 @@ export interface Post {
   view_count: number;
   created_at: string;
   updated_at: string;
+  author_id?: number;
 }
 
 export interface PostsResponse {
@@ -211,6 +212,40 @@ export const deletePost = async (id: number): Promise<void> => {
   }
 };
 
+// ==================== User Content API ====================
+
+/**
+ * 获取当前用户的文章（包括草稿）- 个人内容管理
+ */
+export const fetchMyPosts = async (): Promise<Post[]> => {
+  const response: AxiosResponse<ApiResponse<Post[]>> = await api.get('/user/posts');
+  if (response.data.success) {
+    return response.data.data || [];
+  }
+  throw new Error(response.data.error || 'Failed to fetch posts');
+};
+
+/**
+ * 更新文章（包括发布/删除）
+ */
+export const updatePostAdmin = async (id: number, data: UpdatePostDto): Promise<Post> => {
+  const response: AxiosResponse<ApiResponse<Post>> = await api.put(`/posts/${id}`, data);
+  if (response.data.success) {
+    return response.data.data!;
+  }
+  throw new Error(response.data.error || 'Failed to update post');
+};
+
+/**
+ * 删除文章
+ */
+export const deletePostAdmin = async (id: number): Promise<void> => {
+  const response: AxiosResponse<ApiResponse<void>> = await api.delete(`/posts/${id}`);
+  if (!response.data.success) {
+    throw new Error(response.data.error || 'Failed to delete post');
+  }
+};
+
 // ==================== Mutters API ====================
 
 /**
@@ -377,5 +412,19 @@ export const uploadImage = async (file: File): Promise<string> => {
   }
   throw new Error(response.data.error || 'Failed to upload image');
 };
+
+// ==================== Author API ====================
+
+export interface AuthorInfo {
+  id: number;
+  username: string;
+  email?: string;
+  picture?: string;
+}
+
+export interface AuthorPageData {
+  author: AuthorInfo;
+  posts: Post[];
+}
 
 export default api;

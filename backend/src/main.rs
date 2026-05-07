@@ -55,22 +55,15 @@ async fn main() -> anyhow::Result<()> {
         config: config.clone(),
     };
 
-    // Build protected routes first
-    let protected_routes = Router::new()
-        // Admin routes (protected with dev mode bypass)
-        .route("/admin", get(handlers::admin::dashboard))
-        .route("/admin/editor", get(handlers::admin::editor))
-        .route("/admin/editor/:id", get(handlers::admin::edit_post))
-        .route("/api/admin/ai-settings", get(handlers::admin_api::get_ai_settings).put(handlers::admin_api::update_ai_settings))
-        .route("/api/admin/mutters/translate", post(handlers::admin_api::translate_mutter))
-        .route("/api/admin/mutters/publish", post(handlers::admin_api::publish_mutter_to_post))
-        // Protected routes - Mutters (COMMENTED OUT - Using React SPA instead)
-        // .route("/mutters", get(handlers::mutters::list))
-        // .route("/mutters/:slug", get(handlers::mutters::detail))
+    // Dashboard routes - require login only (dev_auth_bypass), NOT admin_only
+    let dashboard_routes = Router::new()
+        .route("/dashboard", get(handlers::admin::dashboard))
+        .route("/dashboard/editor", get(handlers::admin::editor))
+        .route("/dashboard/editor/:id", get(handlers::admin::edit_post))
         // Protected routes - Mutters API (all mutters are private, require authentication)
         .route("/api/mutters", get(handlers::api_frontend::list_mutters_frontend))
         .route("/api/mutters/:id", get(handlers::api_frontend::get_mutter_frontend))
-        // API routes - Posts (protected with dev mode bypass for write operations)
+        // API routes - Posts write operations (protected with dev mode bypass)
         .route("/api/posts", post(handlers::api::create_post))
         .route("/api/posts/:id", put(handlers::api::update_post).delete(handlers::api::delete_post))
         // API routes - Mutters write operations (protected)
@@ -78,8 +71,15 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/mutters/:id", put(handlers::api::update_mutter).delete(handlers::api::delete_mutter))
         // API routes - Upload
         .route("/api/upload", post(handlers::api::upload_image))
-        .layer(axum_middleware::from_fn(middleware::admin_only))
         .layer(axum_middleware::from_fn(middleware::dev_auth_bypass));
+
+    // Admin API routes - require BOTH login AND admin status
+    let admin_api_routes = Router::new()
+        .route("/api/admin/ai-settings", get(handlers::admin_api::get_ai_settings).put(handlers::admin_api::update_ai_settings))
+        .route("/api/admin/mutters/translate", post(handlers::admin_api::translate_mutter))
+        .route("/api/admin/mutters/publish", post(handlers::admin_api::publish_mutter_to_post))
+        .layer(axum_middleware::from_fn(middleware::dev_auth_bypass))
+        .layer(axum_middleware::from_fn(middleware::admin_only));
 
     // Build public routes
     let app = Router::new()
@@ -90,6 +90,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/auth/google/callback", get(handlers::auth::google_callback))
         .route("/auth/wechat", get(handlers::auth::wechat_login))
         .route("/auth/wechat/callback", get(handlers::auth::wechat_callback))
+
+        // Protected user API routes (require authentication)
+        .route("/api/user/posts", get(handlers::api::get_my_posts))
+        .layer(axum_middleware::from_fn_with_state((), middleware::dev_auth_bypass))
 
         // Public API routes (frontend-friendly DTOs)
         .route("/api/posts", get(handlers::api_frontend::list_posts_frontend))
@@ -103,8 +107,12 @@ async fn main() -> anyhow::Result<()> {
         // .route("/posts/:slug", get(handlers::posts::detail))
         // .route("/tags/:tag", get(handlers::posts::by_tag))
 
-        // Merge protected routes
-        .merge(protected_routes)
+        // Merge protected routes (dashboard and admin API)
+        .merge(dashboard_routes)
+        .merge(admin_api_routes)
+
+        // Author page (public)
+        .route("/author/:username", get(handlers::author::author_page))
 
         // React SPA assets (Nginx strips /blog prefix, so backend sees /assets/*)
         .nest_service("/assets", ServeDir::new({
