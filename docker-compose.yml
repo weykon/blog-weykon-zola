@@ -50,7 +50,7 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     volumes:
-      - ./backend/static/uploads:/app/static/uploads
+      - ./backend/static:/app/static
     depends_on:
       postgres:
         condition: service_healthy

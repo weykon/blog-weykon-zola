@@ -81,9 +81,14 @@ async fn main() -> anyhow::Result<()> {
         .layer(axum_middleware::from_fn(middleware::dev_auth_bypass))
         .layer(axum_middleware::from_fn(middleware::admin_only));
 
+    // Protected user API routes (require authentication) - separate router to avoid auth layer leaking
+    let protected_user_routes = Router::new()
+        .route("/api/user/posts", get(handlers::api::get_my_posts))
+        .layer(axum_middleware::from_fn_with_state((), middleware::dev_auth_bypass));
+
     // Build public routes
     let app = Router::new()
-        // Auth routes (must come before SPA catchall)
+        // Auth routes (must come before SPA catchall) - NO authentication required
         .route("/auth/login", get(handlers::auth::login_page).post(handlers::auth::login))
         .route("/auth/logout", get(handlers::auth::logout))
         .route("/auth/google", get(handlers::auth::google_login))
@@ -91,15 +96,14 @@ async fn main() -> anyhow::Result<()> {
         .route("/auth/wechat", get(handlers::auth::wechat_login))
         .route("/auth/wechat/callback", get(handlers::auth::wechat_callback))
 
-        // Protected user API routes (require authentication)
-        .route("/api/user/posts", get(handlers::api::get_my_posts))
-        .layer(axum_middleware::from_fn_with_state((), middleware::dev_auth_bypass))
-
         // Public API routes (frontend-friendly DTOs)
         .route("/api/posts", get(handlers::api_frontend::list_posts_frontend))
         .route("/api/posts/:id", get(handlers::api_frontend::get_post_frontend))
         .route("/api/user/me", get(handlers::auth::get_current_user))
         .route("/api/tags", get(handlers::api_frontend::list_tags_frontend))
+
+        // Merge protected user routes
+        .merge(protected_user_routes)
 
         // Public Tera template routes (COMMENTED OUT - Using React SPA instead)
         // .route("/", get(handlers::index))

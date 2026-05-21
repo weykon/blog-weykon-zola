@@ -2,14 +2,14 @@ import React, { ReactElement } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-const ADMIN_EMAIL = 'weykonkong@gmail.com';
-
-interface AdminRouteProps {
+interface PrivateRouteProps {
   children: ReactElement;
 }
 
-const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
-  const { user, isAuthenticated, loading } = useAuth();
+// Route that requires login but not admin status
+// Use this for personal dashboard (user's own content management)
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -24,12 +24,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const isAdmin = !!user && (user.is_admin || user.email.toLowerCase() === ADMIN_EMAIL);
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
-  }
-
   return children;
 };
 
-export default AdminRoute;
+export default PrivateRoute;

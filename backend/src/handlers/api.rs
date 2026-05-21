@@ -10,7 +10,7 @@ use tokio::fs;
 use tokio::io::AsyncWriteExt;
 use uuid::Uuid;
 
-use crate::models::{post::CreatePost, post::UpdatePost, Post, Tag, CreateMutter, UpdateMutter};
+use crate::models::{post::CreatePost, post::UpdatePost, Post, Tag, mutter::Mutter, mutter::CreateMutter, mutter::UpdateMutter};
 use crate::services::jwt::Claims;
 use super::AppState;
 
@@ -454,14 +454,13 @@ fn get_file_extension(filename: &str, content_type: &str) -> String {
 pub async fn list_mutters(
     State(state): State<AppState>,
     Query(query): Query<ListQuery>,
-) -> Json<ApiResponse<Vec<Post>>> {
+) -> Json<ApiResponse<Vec<Mutter>>> {
     let page = query.page.unwrap_or(1);
     let limit = query.limit.unwrap_or(50);
     let offset = (page - 1) * limit;
 
-    let mutters = sqlx::query_as::<_, Post>(
-        "SELECT * FROM posts
-         WHERE content_type = 'mutter'
+    let mutters = sqlx::query_as::<_, Mutter>(
+        "SELECT * FROM mutters
          ORDER BY created_at DESC
          LIMIT $1 OFFSET $2"
     )
@@ -488,7 +487,7 @@ pub async fn create_mutter(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
     Json(payload): Json<CreateMutter>,
-) -> (StatusCode, Json<ApiResponse<Post>>) {
+) -> (StatusCode, Json<ApiResponse<Mutter>>) {
     // Validate
     if let Err(e) = payload.validate() {
         return (
@@ -504,6 +503,7 @@ pub async fn create_mutter(
     // Generate title and slug
     let title = payload.generate_title();
     let slug = payload.generate_slug();
+    let is_private = payload.is_private.unwrap_or(true);
 
     let author_id = match claims.sub.parse::<i32>() {
         Ok(value) => value,
@@ -519,15 +519,16 @@ pub async fn create_mutter(
         }
     };
 
-    let result = sqlx::query_as::<_, Post>(
-        "INSERT INTO posts (content_type, title, slug, content, is_draft, author_id)
-         VALUES ('mutter', $1, $2, $3, false, $4)
+    let result = sqlx::query_as::<_, Mutter>(
+        "INSERT INTO mutters (title, slug, content, author_id, is_private)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING *"
     )
     .bind(&title)
     .bind(&slug)
     .bind(&payload.content)
     .bind(author_id)
+    .bind(is_private)
     .fetch_one(&state.db)
     .await;
 
@@ -554,9 +555,9 @@ pub async fn create_mutter(
 pub async fn get_mutter(
     State(state): State<AppState>,
     Path(id): Path<i32>,
-) -> Json<ApiResponse<Post>> {
-    let mutter = sqlx::query_as::<_, Post>(
-        "SELECT * FROM posts WHERE id = $1 AND content_type = 'mutter'"
+) -> Json<ApiResponse<Mutter>> {
+    let mutter = sqlx::query_as::<_, Mutter>(
+        "SELECT * FROM mutters WHERE id = $1"
     )
     .bind(id)
     .fetch_optional(&state.db)
@@ -586,9 +587,9 @@ pub async fn update_mutter(
     Path(id): Path<i32>,
     Extension(claims): Extension<Claims>,
     Json(payload): Json<UpdateMutter>,
-) -> Json<ApiResponse<Post>> {
-    let mutter = sqlx::query_as::<_, Post>(
-        "SELECT * FROM posts WHERE id = $1 AND content_type = 'mutter'"
+) -> Json<ApiResponse<Mutter>> {
+    let mutter = sqlx::query_as::<_, Mutter>(
+        "SELECT * FROM mutters WHERE id = $1"
     )
     .bind(id)
     .fetch_optional(&state.db)
@@ -617,18 +618,18 @@ pub async fn update_mutter(
 
             if let Some(content) = payload.content {
                 // Validate length
-                if content.len() > 1000 {
+                if content.len() > 10000 {
                     return Json(ApiResponse {
                         success: false,
                         data: None,
-                        error: Some("Content too long (max 1000 characters)".to_string()),
+                        error: Some("Content too long (max 10000 characters)".to_string()),
                     });
                 }
                 mutter.content = content;
             }
 
-            let updated = sqlx::query_as::<_, Post>(
-                "UPDATE posts SET content = $1 WHERE id = $2 RETURNING *"
+            let updated = sqlx::query_as::<_, Mutter>(
+                "UPDATE mutters SET content = $1, updated_at = NOW() WHERE id = $2 RETURNING *"
             )
             .bind(&mutter.content)
             .bind(id)
@@ -666,8 +667,8 @@ pub async fn delete_mutter(
     Path(id): Path<i32>,
     Extension(claims): Extension<Claims>,
 ) -> Json<ApiResponse<()>> {
-    let mutter = sqlx::query_as::<_, Post>(
-        "SELECT * FROM posts WHERE id = $1 AND content_type = 'mutter'"
+    let mutter = sqlx::query_as::<_, Mutter>(
+        "SELECT * FROM mutters WHERE id = $1"
     )
     .bind(id)
     .fetch_optional(&state.db)
@@ -710,7 +711,7 @@ pub async fn delete_mutter(
         });
     }
 
-    let result = sqlx::query("DELETE FROM posts WHERE id = $1 AND content_type = 'mutter'")
+    let result = sqlx::query("DELETE FROM mutters WHERE id = $1")
         .bind(id)
         .execute(&state.db)
         .await;

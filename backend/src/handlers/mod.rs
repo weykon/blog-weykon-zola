@@ -14,6 +14,7 @@ pub mod admin_api;
 pub mod api;
 pub mod api_frontend;
 pub mod spa;
+pub mod author;
 
 // Application state shared across handlers
 #[derive(Clone)]

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { fetchMutter, deleteMutter, Mutter } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -104,7 +105,7 @@ const MutterDetailPage: React.FC = () => {
 
         {viewMode === 'preview' ? (
           <div className="prose prose-lg max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
               {mutter.content}
             </ReactMarkdown>
           </div>
@@ -123,7 +124,7 @@ const MutterDetailPage: React.FC = () => {
               {user?.email === 'weykonkong@gmail.com' && (
                 <>
                   <Link
-                    to={`/admin/mutter-editor/${mutter.id}`}
+                    to={`/dashboard/mutter-editor/${mutter.id}`}
                     className="text-indigo-600 hover:text-indigo-800"
                   >
                     Edit

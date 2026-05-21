@@ -156,7 +156,7 @@ pub async fn update_ai_settings(
             base_url = EXCLUDED.base_url,
             api_key = EXCLUDED.api_key,
             updated_by = EXCLUDED.updated_by
-        RETURNING *
+        RETURNING id, provider, model, base_url, api_key, updated_by, created_at, updated_at
         "#
     )
     .bind(provider)
@@ -367,7 +367,9 @@ pub async fn publish_mutter_to_post(
 }
 
 async fn load_ai_settings(db: &PgPool) -> Result<AiSettings, sqlx::Error> {
-    if let Some(settings) = sqlx::query_as::<_, AiSettings>("SELECT * FROM ai_settings WHERE id = 1")
+    if let Some(settings) = sqlx::query_as::<_, AiSettings>(
+        "SELECT id, provider, model, base_url, api_key, updated_by, created_at, updated_at FROM ai_settings WHERE id = 1"
+    )
         .fetch_optional(db)
         .await?
     {
@@ -382,7 +384,9 @@ async fn load_ai_settings(db: &PgPool) -> Result<AiSettings, sqlx::Error> {
     .execute(db)
     .await?;
 
-    sqlx::query_as::<_, AiSettings>("SELECT * FROM ai_settings WHERE id = 1")
+    sqlx::query_as::<_, AiSettings>(
+        "SELECT id, provider, model, base_url, api_key, updated_by, created_at, updated_at FROM ai_settings WHERE id = 1"
+    )
         .fetch_one(db)
         .await
 }

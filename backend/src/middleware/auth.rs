@@ -7,8 +7,6 @@ use axum::{
 use crate::services::jwt::{Claims, JwtService};
 use serde::{Deserialize, Serialize};
 
-pub const ADMIN_EMAIL: &str = "weykonkong@gmail.com";
-
 /// User information extracted from JWT for template rendering
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserContext {
@@ -97,7 +95,7 @@ pub async fn admin_only(
     let is_allowed = request
         .extensions()
         .get::<Claims>()
-        .map(|claims| is_admin_email(&claims.email))
+        .map(|claims| claims.is_admin)
         .unwrap_or(false);
 
     if is_allowed {
@@ -160,10 +158,6 @@ pub async fn user_context(
 
     // Always continue, even if no valid authentication
     next.run(request).await
-}
-
-pub fn is_admin_email(email: &str) -> bool {
-    email.trim().eq_ignore_ascii_case(ADMIN_EMAIL)
 }
 
 /// Optional: Simple API key check for development

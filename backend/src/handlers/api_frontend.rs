@@ -7,7 +7,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::models::Post;
+use crate::models::{Post, mutter::Mutter};
 use crate::middleware::UserContext;
 use super::AppState;
 
@@ -36,7 +36,7 @@ pub struct PostsResponse {
 
 #[derive(Serialize)]
 pub struct MuttersResponse {
-    pub mutters: Vec<Post>,
+    pub mutters: Vec<Mutter>,
     pub total: i64,
     pub page: i64,
     pub limit: i64,
@@ -168,13 +168,12 @@ pub async fn list_mutters_frontend(
     let offset = (page - 1) * limit;
 
     // Mutters are private - only show mutters belonging to the authenticated user
-    let (query_str, total, mutters) = if let Some(Extension(user_ctx)) = user_context {
+    let (total, mutters) = if let Some(Extension(user_ctx)) = user_context {
         let user_id = user_ctx.user_id.parse::<i32>().unwrap_or(0);
 
         // Count only this user's mutters
         let count_result = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM posts
-             WHERE content_type = 'mutter' AND author_id = $1"
+            "SELECT COUNT(*) FROM mutters WHERE author_id = $1"
         )
         .bind(user_id)
         .fetch_one(&state.db)
@@ -183,9 +182,9 @@ pub async fn list_mutters_frontend(
         let total = count_result.unwrap_or(0);
 
         // Get only this user's mutters
-        let mutters = sqlx::query_as::<_, Post>(
-            "SELECT * FROM posts
-             WHERE content_type = 'mutter' AND author_id = $1
+        let mutters = sqlx::query_as::<_, Mutter>(
+            "SELECT * FROM mutters
+             WHERE author_id = $1
              ORDER BY created_at DESC
              LIMIT $2 OFFSET $3"
         )
@@ -195,10 +194,10 @@ pub async fn list_mutters_frontend(
         .fetch_all(&state.db)
         .await;
 
-        ("user mutters query", total, mutters)
+        (total, mutters)
     } else {
         // Not authenticated - return nothing
-        ("unauthenticated", 0i64, Ok(vec![]))
+        (0i64, Ok(vec![]))
     };
 
     match mutters {
@@ -227,10 +226,10 @@ pub async fn get_mutter_frontend(
     State(state): State<AppState>,
     Path(id): Path<i32>,
     user_context: Option<Extension<UserContext>>,
-) -> Json<ApiResponse<Post>> {
+) -> Json<ApiResponse<Mutter>> {
     // First fetch the mutter
-    let mutter = sqlx::query_as::<_, Post>(
-        "SELECT * FROM posts WHERE id = $1 AND content_type = 'mutter'"
+    let mutter = sqlx::query_as::<_, Mutter>(
+        "SELECT * FROM mutters WHERE id = $1"
     )
     .bind(id)
     .fetch_optional(&state.db)
@@ -262,7 +261,7 @@ pub async fn get_mutter_frontend(
             }
 
             // Increment view count
-            let _ = sqlx::query("UPDATE posts SET view_count = view_count + 1 WHERE id = $1")
+            let _ = sqlx::query("UPDATE mutters SET view_count = view_count + 1 WHERE id = $1")
                 .bind(id)
                 .execute(&state.db)
                 .await;

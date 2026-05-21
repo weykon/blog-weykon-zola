@@ -4,18 +4,18 @@
 
   **单个文件：**
   ```bash
-  scp backend/templates/文件名.html douyin:/root/blog.weykon/backend/templates/ && \
-  ssh douyin 'docker cp /root/blog.weykon/backend/templates/文件名.html
+  scp backend/templates/文件名.html france:/root/blog.weykon/backend/templates/ && \
+  ssh france 'docker cp /root/blog.weykon/backend/templates/文件名.html
   blog_backend:/app/templates/文件名.html && \
   cd /root/blog.weykon && docker compose restart backend'
 
   多个文件：
   # 上传所有模板
-  scp backend/templates/*.html douyin:/root/blog.weykon/backend/templates/
-  scp backend/templates/admin/*.html douyin:/root/blog.weykon/backend/templates/admin/
+  scp backend/templates/*.html france:/root/blog.weykon/backend/templates/
+  scp backend/templates/admin/*.html france:/root/blog.weykon/backend/templates/admin/
 
   # 复制到容器并重启
-  ssh douyin 'cd /root/blog.weykon && \
+  ssh france 'cd /root/blog.weykon && \
   docker cp backend/templates blog_backend:/app/ && \
   docker compose restart backend'
 
@@ -100,7 +100,7 @@ DATABASE_URL="postgres://blog_user:blog_password@localhost:5435/blog_db" \
   cargo sqlx prepare
 
 # 方法3: 在服务器上测试（如果服务器有 cargo）
-ssh douyin 'cd /root/blog.weykon/backend && \
+ssh france 'cd /root/blog.weykon/backend && \
   DATABASE_URL="postgres://blog_user:pass@postgres:5432/blog_db" \
   cargo sqlx prepare'
 ```
@@ -131,3 +131,6 @@ ssh douyin 'cd /root/blog.weykon/backend && \
 - 每次添加或修改 SQL 查询后，都必须重新生成 `.sqlx/` 缓存
 - 前端模板和静态文件修改不需要重新生成缓存
 - 数据库 migration 后可能需要重新生成缓存
+
+# Agent-hand context (auto-managed, do not remove)
+@.agent-hand-context.md

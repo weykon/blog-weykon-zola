@@ -7,6 +7,7 @@ use serde::Deserialize;
 
 use super::AppState;
 use crate::middleware::auth::UserContext;
+use crate::models::mutter::Mutter;
 
 #[derive(Deserialize)]
 pub struct ListQuery {
@@ -35,7 +36,7 @@ pub async fn list(
 
     // Query total count (only private mutters)
     let total: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM posts WHERE content_type = 'mutter' AND is_private = true"
+        "SELECT COUNT(*) FROM mutters WHERE is_private = true"
     )
     .fetch_one(&state.db)
     .await
@@ -45,9 +46,9 @@ pub async fn list(
     let total_pages = ((total_count as f64) / (limit as f64)).ceil() as i64;
 
     // Query mutters from database (only private mutters)
-    let mutters = sqlx::query_as::<_, crate::models::Post>(
-        "SELECT * FROM posts
-         WHERE content_type = 'mutter' AND is_private = true
+    let mutters = sqlx::query_as::<_, Mutter>(
+        "SELECT * FROM mutters
+         WHERE is_private = true
          ORDER BY created_at DESC
          LIMIT $1 OFFSET $2"
     )
@@ -90,8 +91,8 @@ pub async fn detail(
         return Err((StatusCode::UNAUTHORIZED, "Authentication required".to_string()));
     }
     // Query mutter by slug (only private mutters)
-    let mutter = sqlx::query_as::<_, crate::models::Post>(
-        "SELECT * FROM posts WHERE slug = $1 AND content_type = 'mutter' AND is_private = true"
+    let mutter = sqlx::query_as::<_, Mutter>(
+        "SELECT * FROM mutters WHERE slug = $1 AND is_private = true"
     )
     .bind(&slug)
     .fetch_optional(&state.db)
@@ -101,7 +102,7 @@ pub async fn detail(
 
     if let Some(mutter) = mutter {
         // Increment view count
-        let _ = sqlx::query("UPDATE posts SET view_count = view_count + 1 WHERE id = $1")
+        let _ = sqlx::query("UPDATE mutters SET view_count = view_count + 1 WHERE id = $1")
             .bind(mutter.id)
             .execute(&state.db)
             .await;

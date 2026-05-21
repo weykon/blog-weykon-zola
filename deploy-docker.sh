@@ -5,7 +5,7 @@
 
 set -e
 
-SERVER="douyin"
+SERVER="france"
 REMOTE_DIR="/root/blog.weykon"
 EXCLUDE_FILE="/tmp/rsync-exclude-$$"
 

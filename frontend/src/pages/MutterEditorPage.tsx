@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import {
   fetchMutter,
   createMutter,
@@ -61,7 +62,7 @@ const MutterEditorPage: React.FC = () => {
         setNotice('Mutter updated');
       } else {
         const created = await createMutter(formData);
-        navigate(`/admin/mutter-editor/${created.id}`);
+        navigate(`/dashboard/mutter-editor/${created.id}`);
         return;
       }
     } catch (err: any) {
@@ -237,7 +238,7 @@ const MutterEditorPage: React.FC = () => {
               <div className="w-full min-h-[300px] px-4 py-2 border border-gray-300 rounded-md bg-gray-50">
                 {formData.content ? (
                   <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                       {formData.content}
                     </ReactMarkdown>
                   </div>
@@ -307,7 +308,7 @@ const MutterEditorPage: React.FC = () => {
           <div>
             <p className="text-sm font-medium text-gray-500 mb-2">Content</p>
             <div className="prose max-w-none bg-gray-50 border border-gray-200 rounded-md px-4 py-3">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                 {translated.content}
               </ReactMarkdown>
             </div>

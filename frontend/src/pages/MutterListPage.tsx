@@ -95,7 +95,7 @@ const MutterListPage: React.FC = () => {
           <span className="text-sm text-gray-500">Total: {mutters.length}</span>
           {user?.email === 'weykonkong@gmail.com' && (
             <Link
-              to="/admin/mutter-editor"
+              to="/dashboard/mutter-editor"
               className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
             >
               + New Mutter
@@ -131,7 +131,7 @@ const MutterListPage: React.FC = () => {
                     {user?.email === 'weykonkong@gmail.com' && (
                       <>
                         <Link
-                          to={`/admin/mutter-editor/${mutter.id}`}
+                          to={`/dashboard/mutter-editor/${mutter.id}`}
                           className="text-indigo-500 hover:text-indigo-700"
                           onClick={(e) => e.stopPropagation()}
                         >

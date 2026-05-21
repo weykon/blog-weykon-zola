@@ -61,3 +61,4 @@ build/
 
 # macOS
 .DS_Store
+.agent-hand-context.md

@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import MatrixRain from './MatrixRain';
+import FloatingPapers from './FloatingPapers';
 import { ArrowRightIcon } from './Icons';
 
 const Hero: React.FC = () => {
   return (
     <div className="relative w-full min-h-[90vh] flex items-center overflow-hidden bg-slate-50">
-      {/* Background Matrix Rain */}
-      <MatrixRain />
+      {/* Background Floating Papers */}
+      <FloatingPapers />
       
       {/* Overlay to ensure text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-50/80 via-slate-50/50 to-slate-50 pointer-events-none"></div>

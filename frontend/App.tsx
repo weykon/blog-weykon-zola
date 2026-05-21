@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './src/contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import AdminRoute from './src/components/AdminRoute';
+import PrivateRoute from './src/components/AdminRoute';
 
 // 页面组件
 import HomePage from './src/pages/HomePage';
@@ -16,6 +16,7 @@ import TagPage from './src/pages/TagPage';
 import LoginPage from './src/pages/LoginPage';
 import AdminPage from './src/pages/AdminPage';
 import EditorPage from './src/pages/EditorPage';
+import AuthorPage from './src/pages/AuthorPage';
 
 function App() {
   return (
@@ -30,49 +31,50 @@ function App() {
               <Route path="/posts" element={<PostListPage />} />
               <Route path="/posts/:id" element={<PostDetailPage />} />
               <Route path="/tags/:tag" element={<TagPage />} />
+              <Route path="/author/:username" element={<AuthorPage />} />
               <Route path="/login" element={<LoginPage />} />
 
-              {/* 需要认证的路由 */}
+              {/* 需要认证的路由 (个人内容管理 - 所有登录用户可用) */}
               <Route path="/mutters" element={<MutterListPage />} />
               <Route path="/mutters/:id" element={<MutterDetailPage />} />
               <Route
-                path="/admin"
+                path="/dashboard"
                 element={
-                  <AdminRoute>
+                  <PrivateRoute>
                     <AdminPage />
-                  </AdminRoute>
+                  </PrivateRoute>
                 }
               />
               <Route
-                path="/admin/editor"
+                path="/dashboard/editor"
                 element={
-                  <AdminRoute>
+                  <PrivateRoute>
                     <EditorPage />
-                  </AdminRoute>
+                  </PrivateRoute>
                 }
               />
               <Route
-                path="/admin/editor/:id"
+                path="/dashboard/editor/:id"
                 element={
-                  <AdminRoute>
+                  <PrivateRoute>
                     <EditorPage />
-                  </AdminRoute>
+                  </PrivateRoute>
                 }
               />
               <Route
-                path="/admin/mutter-editor"
+                path="/dashboard/mutter-editor"
                 element={
-                  <AdminRoute>
+                  <PrivateRoute>
                     <MutterEditorPage />
-                  </AdminRoute>
+                  </PrivateRoute>
                 }
               />
               <Route
-                path="/admin/mutter-editor/:id"
+                path="/dashboard/mutter-editor/:id"
                 element={
-                  <AdminRoute>
+                  <PrivateRoute>
                     <MutterEditorPage />
-                  </AdminRoute>
+                  </PrivateRoute>
                 }
               />
 

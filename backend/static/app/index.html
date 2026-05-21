@@ -41,14 +41,30 @@
         width: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #f1f1f1; 
+        background: #f1f1f1;
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1; 
+        background: #cbd5e1;
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8; 
+        background: #94a3b8;
+      }
+      /* Markdown list styling - !important to override Tailwind CDN dynamic injection */
+      .prose ul,
+      .prose ol {
+        list-style: revert !important;
+        padding-left: 1.75rem !important;
+      }
+      .prose ul {
+        list-style-type: disc !important;
+      }
+      .prose ol {
+        list-style-type: decimal !important;
+      }
+      .prose li {
+        margin: 0.25rem 0;
+        display: list-item !important;
       }
     </style>
 
@@ -61,7 +77,7 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/assets/index-BvocNail.js"></script>
+  <script type="module" crossorigin src="/assets/index-BcAaZmLI.js"></script>
 </head>
   <body class="bg-slate-50 text-slate-900 antialiased selection:bg-primary-500 selection:text-white">
     <div id="root"></div>

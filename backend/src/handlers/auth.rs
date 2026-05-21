@@ -7,10 +7,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 use super::AppState;
-use crate::{
-    middleware::is_admin_email,
-    services::jwt::JwtService,
-};
+use crate::services::jwt::JwtService;
 
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
@@ -45,18 +42,6 @@ pub async fn login(
 ) -> impl IntoResponse {
     let email = payload.email.trim().to_lowercase();
 
-    if !is_admin_email(&email) {
-        return (
-            StatusCode::FORBIDDEN,
-            [(header::SET_COOKIE, String::new())],
-            Json(LoginResponse {
-                success: false,
-                message: "Only the configured owner account can access the admin system.".to_string(),
-                token: None,
-            })
-        );
-    }
-
     // Query user from database
     let user = sqlx::query!(
         r#"
@@ -80,7 +65,7 @@ pub async fn login(
                 &user.id.to_string(),
                 &user.email.unwrap_or_default(),
                 &user.username,
-                true,
+                user.is_admin.unwrap_or(false),
             ) {
                 Ok(token) => {
                     // Set cookie with token (use base_path for correct routing)
@@ -228,7 +213,7 @@ pub async fn get_current_user(
                             user_id: claims.sub,
                             email: claims.email,
                             username: claims.username,
-                            is_admin: claims.is_admin,
+                            is_admin: user.is_admin.unwrap_or(false),
                             picture: user.picture,
                         }),
                     });
@@ -372,12 +357,6 @@ pub async fn google_callback(
         })?;
 
     let normalized_email = user_info.email.trim().to_lowercase();
-    if !user_info.verified_email || !is_admin_email(&normalized_email) {
-        return Err((
-            StatusCode::FORBIDDEN,
-            "Only the configured owner Google account can access the admin system".to_string(),
-        ));
-    }
 
     // Check if user exists in database
     let existing_user = sqlx::query!(
@@ -397,12 +376,12 @@ pub async fn google_callback(
     })?;
 
     // Get or create user
-    let (user_id, user_email, username, _is_admin) = if let Some(user) = existing_user {
+    let (user_id, user_email, username, is_admin) = if let Some(user) = existing_user {
         // Update existing user with Google ID if not set
         sqlx::query(
             r#"
             UPDATE users
-            SET google_id = $1, email = $2, is_admin = true, updated_at = NOW()
+            SET google_id = $1, email = $2, updated_at = NOW()
             WHERE id = $3
             "#
         )
@@ -416,7 +395,7 @@ pub async fn google_callback(
             (StatusCode::INTERNAL_SERVER_ERROR, "Failed to update user".to_string())
         })?;
 
-        (user.id, user.email, user.username, user.is_admin)
+        (user.id, user.email, user.username, user.is_admin.unwrap_or(false))
     } else {
         // Create new user
         let username = user_info.name.split_whitespace().next()
@@ -426,7 +405,7 @@ pub async fn google_callback(
         let new_user = sqlx::query_as::<_, OAuthUserRow>(
             r#"
             INSERT INTO users (email, username, google_id, is_admin)
-            VALUES ($1, $2, $3, true)
+            VALUES ($1, $2, $3, false)
             RETURNING id, email, username, is_admin
             "#
         )
@@ -440,7 +419,7 @@ pub async fn google_callback(
             (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create user".to_string())
         })?;
 
-        (new_user.id, new_user.email, new_user.username, new_user.is_admin)
+        (new_user.id, new_user.email, new_user.username, new_user.is_admin.unwrap_or(false))
     };
 
     // Generate JWT token
@@ -452,7 +431,7 @@ pub async fn google_callback(
         &user_id.to_string(),
         &user_email.unwrap_or_default(),
         &username,
-        true,
+        is_admin,
     ).map_err(|e| {
         tracing::error!("Failed to generate JWT: {:?}", e);
         (StatusCode::INTERNAL_SERVER_ERROR, "Failed to generate token".to_string())
