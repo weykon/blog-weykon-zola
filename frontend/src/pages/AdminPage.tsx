@@ -156,7 +156,7 @@ const AdminPage: React.FC = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <Link
-          to="/admin/editor"
+          to="/dashboard/editor"
           className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition"
         >
           <h2 className="text-xl font-bold mb-2">Create New Post</h2>
@@ -240,7 +240,7 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div className="flex gap-2 ml-4">
                     <Link
-                      to={`/admin/editor/${post.id}`}
+                      to={`/dashboard/editor/${post.id}`}
                       className="px-3 py-1 text-sm bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
                     >
                       编辑
@@ -349,7 +349,7 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div className="flex gap-2 ml-4">
                     <Link
-                      to={`/admin/editor/${post.id}`}
+                      to={`/dashboard/editor/${post.id}`}
                       className="px-3 py-1 text-sm bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
                     >
                       编辑

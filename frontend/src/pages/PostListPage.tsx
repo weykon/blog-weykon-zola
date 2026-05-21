@@ -63,7 +63,7 @@ const PostListPage: React.FC = () => {
         <h1 className="text-3xl font-bold">Blog Posts</h1>
         {user?.email === 'weykonkong@gmail.com' && (
           <Link
-            to="/admin/editor"
+            to="/dashboard/editor"
             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
           >
             + New Post
